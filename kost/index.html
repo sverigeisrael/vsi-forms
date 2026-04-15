@@ -62,60 +62,60 @@ textarea:focus { outline: none; border-color: #5599dd; }
   <div class="roll-rad" id="vis-roll"></div>
 
   <div class="info-box">
-    Du har angett att du har kostönskemål. Kryssa i de alternativ som stämmer in på dig
-    så kan Aronsborg förbereda rätt mat. Har du inget ytterligare önskemål kan du lämna
-    allt okryssat och skicka formuläret ändå – det räcker att vi registrerar ditt svar.
+    Kryssa i de alternativ som stämmer in på dig så kan Aronsborg förbereda rätt mat.
+    Har du inget ytterligare önskemål kan du lämna allt okryssat och skicka ändå – det
+    räcker att vi registrerar ditt svar.
   </div>
 
   <div class="sektion-rubrik">Kostpreferenser / allergier</div>
   <div class="kryss-grid" id="kryss-grid">
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Ovo/lakto vegetarian"> Ovo/lakto vegetarian
+      <input type="checkbox" data-kod="veg"> Ovo/lakto vegetarian
     </label>
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Vegan"> Vegan
+      <input type="checkbox" data-kod="vegan"> Vegan
     </label>
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Ej fläsk"> Ej fläsk
+      <input type="checkbox" data-kod="flask"> Ej fläsk
     </label>
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Pescetarian"> Pescetarian
+      <input type="checkbox" data-kod="pesc"> Pescetarian
     </label>
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Ej gluten"> Ej gluten<br><span style="font-size:10px;color:#888;font-weight:400;">(råg, vete, korn, havre, spelt…)</span>
+      <input type="checkbox" data-kod="gluten"> Ej gluten<br><span style="font-size:10px;color:#888;font-weight:400;">(råg, vete, korn, havre, spelt…)</span>
     </label>
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Ej laktos"> Ej laktos
+      <input type="checkbox" data-kod="laktos"> Ej laktos
     </label>
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Ej mjölkprotein"> Ej mjölkprotein
+      <input type="checkbox" data-kod="mjolk"> Ej mjölkprotein
     </label>
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Ej fisk"> Ej fisk
+      <input type="checkbox" data-kod="fisk"> Ej fisk
     </label>
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Ej kräft- och skaldjur"> Ej kräft- och skaldjur
+      <input type="checkbox" data-kod="skaldjur"> Ej kräft- och skaldjur
     </label>
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Ej ägg"> Ej ägg
+      <input type="checkbox" data-kod="agg"> Ej ägg
     </label>
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Ej jordnötter/nötter"> Ej jordnötter/nötter<br><span style="font-size:10px;color:#888;font-weight:400;">(mandel, hasselnöt, valnöt…)</span>
+      <input type="checkbox" data-kod="notter"> Ej jordnötter/nötter<br><span style="font-size:10px;color:#888;font-weight:400;">(mandel, hasselnöt, valnöt…)</span>
     </label>
     <label class="kryss-label" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Ej soja"> Ej soja
+      <input type="checkbox" data-kod="soja"> Ej soja
     </label>
     <label class="kryss-label hel-rad" onclick="togglVald(this)">
-      <input type="checkbox" name="kost" value="Ej selleri/senap/lupin"> Ej selleri / senap / lupin &amp; sulfit
+      <input type="checkbox" data-kod="selleri"> Ej selleri / senap / lupin &amp; sulfit
     </label>
   </div>
 
   <div class="sektion-rubrik">Kommentar / övrigt</div>
-  <textarea id="kommentar" placeholder="Övriga önskemål eller information till köket (max 100 tecken)" maxlength="100"></textarea>
+  <textarea id="kommentar" placeholder="Övriga önskemål eller information till köket (max 80 tecken)" maxlength="80"></textarea>
 
   <div class="sektion-rubrik" style="margin-top:18px;">Närvaro</div>
   <label class="kryss-label hel-rad" style="margin-top:0;" onclick="togglVald(this)">
-    <input type="checkbox" id="samtliga" name="narvaro" value="Medverkar samtliga dagar/måltider"> Medverkar samtliga dagar och måltider (lördag–söndag)
+    <input type="checkbox" id="samtliga" data-kod="alla"> Medverkar samtliga dagar och måltider (lördag–söndag)
   </label>
 
   <button class="skicka-btn" id="skicka-btn" onclick="skicka()">Skicka in mina kostpreferenser</button>
@@ -123,7 +123,7 @@ textarea:focus { outline: none; border-color: #5599dd; }
 </div>
 
 <div class="tack-ruta" id="tack">
-  <h2>✓ Tack!</h2>
+  <h2>&#10003; Tack!</h2>
   <p>Dina kostpreferenser är registrerade.<br>
      Vi ser till att Aronsborg förbereder rätt mat för dig.</p>
 </div>
@@ -133,19 +133,17 @@ textarea:focus { outline: none; border-color: #5599dd; }
 <script>
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
-const p = new URLSearchParams(location.search);
-const namn  = p.get('n') || '';
-const email = p.get('e') || '';
-const roll  = p.get('r') || '';
-const notering = p.get('k') || '';   // befintlig specialkost-notering från anmälan
+const p      = new URLSearchParams(location.search);
+const namn   = p.get('n') || '';
+const email  = p.get('e') || '';
+const roll   = p.get('r') || '';
+const notering = p.get('k') || '';
 
 document.getElementById('vis-namn').textContent = namn || 'Okänd deltagare';
 if (roll) document.getElementById('vis-roll').textContent = roll;
 
-// Visa befintlig notering om den finns
-if (notering) {
-  document.getElementById('kommentar').value = notering;
-}
+// Prefyll kommentar med befintlig notering
+if (notering) document.getElementById('kommentar').value = notering;
 
 function togglVald(lbl) {
   setTimeout(() => {
@@ -154,42 +152,67 @@ function togglVald(lbl) {
   }, 0);
 }
 
-function skicka() {
-  const valda = [...document.querySelectorAll('input[name=kost]:checked')]
-    .map(c => c.value);
-  const samtliga = document.getElementById('samtliga').checked;
-  const kommentar = document.getElementById('kommentar').value.trim();
+const KOD_NAMN = {
+  veg:     'Ovo/lakto vegetarian',
+  vegan:   'Vegan',
+  flask:   'Ej fläsk',
+  pesc:    'Pescetarian',
+  gluten:  'Ej gluten',
+  laktos:  'Ej laktos',
+  mjolk:   'Ej mjölkprotein',
+  fisk:    'Ej fisk',
+  skaldjur:'Ej kräft- och skaldjur',
+  agg:     'Ej ägg',
+  notter:  'Ej jordnötter/nötter',
+  soja:    'Ej soja',
+  selleri: 'Ej selleri/senap/lupin',
+};
 
-  const btn = document.getElementById('skicka-btn');
+function skicka() {
+  const valda = [...document.querySelectorAll('#kryss-grid input[type=checkbox]:checked')]
+    .map(c => c.dataset.kod).filter(Boolean);
+  const allaD    = document.getElementById('samtliga').checked;
+  const kommentar = document.getElementById('kommentar').value.trim().substring(0, 80);
+
+  const btn    = document.getElementById('skicka-btn');
   const status = document.getElementById('status');
   btn.disabled = true;
-  btn.textContent = 'Skickar…';
+  btn.textContent = 'Skickar\u2026';
   status.style.display = 'none';
 
+  // Parsebar subject: [VSI-KOST2:{email}|{flaggor}|{kommentar}|{alla_dagar}]
+  // flaggor = kommaseparerade koder för kryssade val (tom sträng om inga)
+  const flaggor    = valda.join(',');
+  const allaStr    = allaD ? 'ja' : 'nej';
+  const encEmail   = encodeURIComponent(email);
+  const encKomm    = encodeURIComponent(kommentar);
+  const subject    = `[VSI-KOST2:${encEmail}|${flaggor}|${encKomm}|${allaStr}]`;
+
+  // Läsbar meddelandetext
   const valtTxt = valda.length
-    ? valda.map(v => '• ' + v).join('\n')
-    : '(inga kryssrutor valda)';
-  const narvaroTxt = samtliga ? 'Ja – samtliga dagar/måltider' : 'Ej angett';
+    ? valda.map(k => '\u2022 ' + (KOD_NAMN[k] || k)).join('\n')
+    : '(inga alternativ valda)';
+  const message =
+    `Kostpreferenser fr\u00e5n: ${namn}\n` +
+    `Roll: ${roll || '\u2013'}\n` +
+    `E-post: ${email || '\u2013'}\n\n` +
+    `VALDA ALTERNATIV:\n${valtTxt}\n\n` +
+    `Kommentar: ${kommentar || '\u2013'}\n` +
+    `N\u00e4rvaro samtliga dagar: ${allaD ? 'Ja' : 'Ej angett'}`;
 
   emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-    subject:   `[VSI-KOST] ${namn}`,
-    from_name: namn,
+    subject,
+    from_name:  namn,
     from_email: email,
-    message:
-      `Kostpreferenser för: ${namn}\n` +
-      `Roll: ${roll || '–'}\n` +
-      `E-post: ${email || '–'}\n\n` +
-      `VALDA ALTERNATIV:\n${valtTxt}\n\n` +
-      `Kommentar: ${kommentar || '–'}\n` +
-      `Närvaro samtliga dagar: ${narvaroTxt}`,
-    to_email: ADMIN_EMAIL,
+    message,
+    to_email:   ADMIN_EMAIL,
   }).then(() => {
     document.getElementById('formular').style.display = 'none';
     document.getElementById('tack').style.display = 'block';
   }).catch(err => {
     btn.disabled = false;
     btn.textContent = 'Skicka in mina kostpreferenser';
-    status.textContent = 'Fel vid skickning – försök igen eller kontakta administratören.';
+    status.textContent = 'Fel vid skickning \u2013 f\u00f6rs\u00f6k igen eller kontakta administrat\u00f6ren.';
     status.className = 'fel';
     status.style.display = 'block';
     console.error(err);
