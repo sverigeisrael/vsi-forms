@@ -113,11 +113,6 @@ textarea:focus { outline: none; border-color: #5599dd; }
   <div class="sektion-rubrik">Kommentar / övrigt</div>
   <textarea id="kommentar" placeholder="Övriga önskemål eller information till köket (max 80 tecken)" maxlength="80"></textarea>
 
-  <div class="sektion-rubrik" style="margin-top:18px;">Närvaro</div>
-  <label class="kryss-label hel-rad" style="margin-top:0;" onclick="togglVald(this)">
-    <input type="checkbox" id="samtliga" data-kod="alla"> Medverkar samtliga dagar och måltider (lördag–söndag)
-  </label>
-
   <button class="skicka-btn" id="skicka-btn" onclick="skicka()">Skicka in mina kostpreferenser</button>
   <div id="status"></div>
 </div>
@@ -171,7 +166,6 @@ const KOD_NAMN = {
 function skicka() {
   const valda = [...document.querySelectorAll('#kryss-grid input[type=checkbox]:checked')]
     .map(c => c.dataset.kod).filter(Boolean);
-  const allaD    = document.getElementById('samtliga').checked;
   const kommentar = document.getElementById('kommentar').value.trim().substring(0, 80);
 
   const btn    = document.getElementById('skicka-btn');
@@ -183,10 +177,9 @@ function skicka() {
   // Parsebar subject: [VSI-KOST2:{email}|{flaggor}|{kommentar}|{alla_dagar}]
   // flaggor = kommaseparerade koder för kryssade val (tom sträng om inga)
   const flaggor    = valda.join(',');
-  const allaStr    = allaD ? 'ja' : 'nej';
   const encEmail   = encodeURIComponent(email);
   const encKomm    = encodeURIComponent(kommentar);
-  const subject    = `[VSI-KOST2:${encEmail}|${flaggor}|${encKomm}|${allaStr}]`;
+  const subject    = `[VSI-KOST2:${encEmail}|${flaggor}|${encKomm}]`;
 
   // Läsbar meddelandetext
   const valtTxt = valda.length
@@ -197,8 +190,7 @@ function skicka() {
     `Roll: ${roll || '\u2013'}\n` +
     `E-post: ${email || '\u2013'}\n\n` +
     `VALDA ALTERNATIV:\n${valtTxt}\n\n` +
-    `Kommentar: ${kommentar || '\u2013'}\n` +
-    `N\u00e4rvaro samtliga dagar: ${allaD ? 'Ja' : 'Ej angett'}`;
+    `Kommentar: ${kommentar || '\u2013'}`;
 
   emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
     subject,
