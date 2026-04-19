@@ -66,6 +66,22 @@ textarea:focus { outline: none; border-color: #5599dd; }
     Nedan ser du din bokning. Vänligen bekräfta att uppgifterna stämmer — eller meddela oss om något behöver korrigeras.
   </div>
 
+  <div class="sektion" id="sek-best" style="display:none;">
+    <div class="sek-rubrik">🎟 Beställning</div>
+    <div id="best-lista"></div>
+  </div>
+
+  <div class="sektion" id="sek-bet" style="display:none;">
+    <div class="sek-rubrik">💳 Betalning</div>
+    <div class="rad">
+      <span class="rad-ikon" id="bet-ikon">–</span>
+      <div class="rad-text">
+        <strong id="bet-status">–</strong>
+        <span id="bet-detalj"></span>
+      </div>
+    </div>
+  </div>
+
   <div class="sektion" id="sek-boende" style="display:none;">
     <div class="sek-rubrik">🛏 Boende</div>
     <div class="rad">
@@ -151,6 +167,19 @@ const maltider = (p.get('m') || '').split(',').filter(Boolean);
 const kost    = p.get('sk') || '';
 const resaTyp = p.get('rt') || '';
 const resaOrt = p.get('ro') || '';
+const bestKoder = (p.get('del') || '').split(',').filter(Boolean);
+const belopp   = p.get('bel') || '';
+const betald   = p.get('bet') || '';
+const faktnr   = p.get('fakt') || '';
+
+const BEST_NAMN = {
+  kongresspaket_1: 'Kongresspaket (1 person)',
+  kongresspaket_2: 'Kongresspaket (2 personer)',
+  sem_2dag_1: 'Seminariebiljett lördag (1 person)',
+  sem_2dag_2: 'Seminariebiljett lördag (2 personer)',
+  sem_1dag_1: 'Seminariebiljett söndag (1 person)',
+  sem_1dag_2: 'Seminariebiljett söndag (2 personer)',
+};
 
 const MALTID_NAMN = {
   lu: 'Lunch lördag', ef: 'Fika lördag', mi: 'Kongressmiddag',
@@ -161,6 +190,24 @@ const MALTID_ORDNING = ['lu', 'ef', 'mi', 'sf', 'ls'];
 document.getElementById('vis-namn').textContent = namn || 'Okänd deltagare';
 const rollRad = [roll, forening].filter(Boolean).join(' · ');
 if (rollRad) document.getElementById('vis-roll').textContent = rollRad;
+
+// Beställning
+if (bestKoder.length) {
+  document.getElementById('sek-best').style.display = '';
+  document.getElementById('best-lista').innerHTML = bestKoder
+    .map(k => `<div class="rad"><span class="rad-ikon">🎟</span><div class="rad-text"><strong>${BEST_NAMN[k] || k}</strong></div></div>`)
+    .join('');
+}
+
+// Betalning
+if (belopp) {
+  document.getElementById('sek-bet').style.display = '';
+  const erBetald = betald === 'ja';
+  document.getElementById('bet-ikon').textContent = erBetald ? '✅' : '⏳';
+  document.getElementById('bet-status').textContent = erBetald ? 'Betalad' : 'Ej betalad';
+  const detaljer = [belopp ? belopp + ' kr' : '', faktnr ? 'Faktura ' + faktnr : ''].filter(Boolean).join(' · ');
+  document.getElementById('bet-detalj').textContent = detaljer;
+}
 
 // Boende
 if (boende) {
