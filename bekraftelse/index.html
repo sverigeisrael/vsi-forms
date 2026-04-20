@@ -93,6 +93,14 @@ textarea:focus { outline: none; border-color: #5599dd; }
     </div>
   </div>
 
+  <div class="sektion" id="sek-mf" style="display:none;">
+    <div class="sek-rubrik">👤 Medföljande</div>
+    <div class="rad">
+      <span class="rad-ikon">🤝</span>
+      <div class="rad-text"><strong id="mf-namn">–</strong></div>
+    </div>
+  </div>
+
   <div class="sektion">
     <div class="sek-rubrik">🍽 Måltider</div>
     <div class="maltid-lista" id="maltid-lista"></div>
@@ -163,6 +171,7 @@ const forening = p.get('f') || '';
 const boende    = p.get('b') || '';   // 'enkelrum'|'dubbelrum'|''
 const extranatt = p.get('xn') || ''; // 'ja' om extranatt fre–lör
 const rumspartner = p.get('rp') || ''; // namn på rumspartner (dubbelrum)
+const medfoljande = p.get('mf') || ''; // namn på medföljande (interna)
 const maltider = (p.get('m') || '').split(',').filter(Boolean);
 const kost    = p.get('sk') || '';
 const resaTyp = p.get('rt') || '';
@@ -219,6 +228,12 @@ if (boende) {
     ? 'Fredag–söndag (inkl. extranatt fredag–lördag)'
     : 'Lördag–söndag';
   document.getElementById('boende-datum').textContent = datumText;
+}
+
+// Medföljande
+if (medfoljande) {
+  document.getElementById('sek-mf').style.display = '';
+  document.getElementById('mf-namn').textContent = medfoljande;
 }
 
 // Måltider
