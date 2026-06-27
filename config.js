@@ -11,5 +11,5 @@ const EMAILJS_TEMPLATE_ID = 'template_cbw0eoi';
 const CLOUDINARY_CLOUD_NAME    = 'dh2npg32u';
 const CLOUDINARY_UPLOAD_PRESET = 'VSI-ADMIN';
 
-// Admin-mejladress
-const ADMIN_EMAIL = 'magnusagestav@gmail.com';
+// Admin-mejladress (formulärsvar landar här → alias till magnus@ som läses via IMAP)
+const ADMIN_EMAIL = 'admin@sverigeisrael.se';
