@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Israelnytt — redaktörsformulär</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="../config.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #f0f4f8; padding: 16px; color: #1F2937; }
+  .kort { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 14px rgba(0,0,0,.12); overflow: hidden; }
+  .logo-rad { padding: 16px 24px 0; text-align: center; }
+  .logo-rad img { height: 52px; }
+  .header { background: #004A99; padding: 18px 24px; }
+  .header h1 { color: #fff; font-size: 19px; }
+  .header p { color: #EAF4FF; font-size: 13px; margin-top: 4px; }
+  .body { padding: 20px 24px 26px; }
+  .info-box { background: #EAF4FF; border: 1px solid #b3d8f0; border-radius: 6px; padding: 11px 14px; font-size: 13px; color: #004A99; margin-bottom: 18px; line-height: 1.5; }
+  .sektion { margin-top: 22px; }
+  .sektion-rubrik { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #004A99; border-bottom: 2px solid #e8f0f8; padding-bottom: 6px; margin-bottom: 12px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin: 10px 0 4px; }
+  input[type=text], input[type=url], textarea, select {
+    width: 100%; border: 1px solid #ccd8e8; border-radius: 6px; padding: 9px 11px; font-size: 14px; font-family: inherit; color: #1F2937; background: #fff;
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: #004A99; }
+  textarea { resize: vertical; min-height: 70px; }
+  .rad2 { display: flex; gap: 12px; flex-wrap: wrap; }
+  .rad2 > div { flex: 1; min-width: 180px; }
+  .item { border: 1px solid #dde4ed; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; background: #f9fbfd; position: relative; }
+  .item .num { position: absolute; top: -9px; left: 12px; background: #004A99; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 10px; }
+  .ta-bort { position: absolute; top: 8px; right: 10px; background: none; border: none; cursor: pointer; color: #aaa; font-size: 20px; line-height: 1; }
+  .ta-bort:hover { color: #c00; }
+  .lagg-till { display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px dashed #b3cde8; border-radius: 6px; padding: 9px 16px; font-size: 13px; color: #004A99; cursor: pointer; margin-top: 2px; }
+  .lagg-till:hover { background: #EAF4FF; border-color: #004A99; }
+  .skicka { width: 100%; background: #004A99; color: #fff; border: none; border-radius: 8px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 24px; }
+  .skicka:hover { background: #003a78; }
+  .skicka:disabled { background: #9CA3AF; cursor: default; }
+  .fel-box { display: none; background: #fff0f0; border: 1px solid #f0b3b3; color: #c00; border-radius: 6px; padding: 11px 14px; font-size: 13px; margin-top: 14px; line-height: 1.5; }
+  .bekraftelse { display: none; text-align: center; padding: 40px 24px; }
+  .bekraftelse .ikon { font-size: 52px; }
+  .bekraftelse h2 { color: #004A99; font-size: 20px; margin: 12px 0 6px; }
+  .bekraftelse p { color: #374151; font-size: 14px; }
+  .hint { font-size: 11px; color: #6B7280; margin-top: 3px; }
+</style>
+</head>
+<body>
+<div class="kort">
+  <div class="logo-rad"><img src="../assets/vsi-logo.png" alt="Vänskapsförbundet Sverige–Israel"></div>
+  <div class="header">
+    <h1>Israelnytt — redaktörsformulär</h1>
+    <p>Fyll i innehållet till nästa nummer. Bilder väljs/genereras i appen.</p>
+  </div>
+
+  <div class="body" id="formularet">
+    <div class="info-box">
+      Fyll i ledaren, artiklarna (rubrik + ingress + länk + kategori + källa) och eventuella videoklipp.
+      Markera en artikel som kategori <strong>Analys</strong> om den ska ligga i det stora analysblocket överst.
+      Klicka <em>Skicka in</em> längst ner — innehållet landar i VSI Admin-appen.
+    </div>
+
+    <label for="redaktor">Ditt namn (avsändare)</label>
+    <input type="text" id="redaktor" placeholder="T.ex. Mats Fält" value="Mats Fält">
+
+    <!-- LEDARE -->
+    <div class="sektion">
+      <div class="sektion-rubrik">Redaktören har ordet</div>
+      <label for="l-rubrik">Rubrik</label>
+      <input type="text" id="l-rubrik" value="Redaktören har ordet">
+      <label for="l-text">Text (ett eller flera stycken – lämna blankrad mellan stycken)</label>
+      <textarea id="l-text" rows="6" placeholder="Skriv ledaren här…"></textarea>
+      <div class="rad2">
+        <div>
+          <label for="l-namn">Namn</label>
+          <input type="text" id="l-namn" value="Mats Fält">
+        </div>
+        <div>
+          <label for="l-titel">Titel</label>
+          <input type="text" id="l-titel" value="Redaktör & vice ordförande">
+        </div>
+      </div>
+      <label for="l-url">Länk till hela ledaren (knappen "Läs veckans ledare")</label>
+      <input type="url" id="l-url" placeholder="https://…">
+    </div>
+
+    <!-- ARTIKLAR -->
+    <div class="sektion">
+      <div class="sektion-rubrik">Artiklar (Läsvärt & Analys)</div>
+      <div id="artiklar"></div>
+      <button type="button" class="lagg-till" onclick="laggTillArtikel()">＋ Lägg till artikel</button>
+    </div>
+
+    <!-- VIDEO -->
+    <div class="sektion">
+      <div class="sektion-rubrik">Video & klipp (max 3 visas)</div>
+      <div id="videor"></div>
+      <button type="button" class="lagg-till" onclick="laggTillVideo()">＋ Lägg till videoklipp</button>
+    </div>
+
+    <!-- INSÄNDARE -->
+    <div class="sektion">
+      <div class="sektion-rubrik">Insändare / Debatt (valfritt)</div>
+      <label for="i-rubrik">Rubrik</label>
+      <input type="text" id="i-rubrik" placeholder="Lämna tomt om ingen insändare">
+      <label for="i-text">Text</label>
+      <textarea id="i-text" rows="3"></textarea>
+      <div class="rad2">
+        <div>
+          <label for="i-kalla">Källa/skribent</label>
+          <input type="text" id="i-kalla" placeholder="T.ex. namn eller publikation">
+        </div>
+        <div>
+          <label for="i-url">Länk</label>
+          <input type="url" id="i-url" placeholder="https://…">
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="skicka" id="skicka-knapp" onclick="skicka()">Skicka in till redaktionen</button>
+    <div class="fel-box" id="fel-box"></div>
+  </div>
+
+  <div class="bekraftelse" id="bekraftelse">
+    <div class="ikon">✅</div>
+    <h2>Tack! Innehållet är skickat.</h2>
+    <p>Redaktionen läser in det i VSI Admin-appen och färdigställer numret.</p>
+  </div>
+</div>
+
+<script>
+const KATEGORIER = ["Läsvärt","Opinion","Analys","Internationellt","Utrikes","Historik","Säkerhet","Debatt","USA","EU","FN & Diplomati","Iran","Hamas","Ekonomi","Politik","Media"];
+
+function katOptions(vald) {
+  return KATEGORIER.map(k => `<option value="${k}"${k===vald?' selected':''}>${k}</option>`).join('');
+}
+
+let artNr = 0, vidNr = 0;
+
+function laggTillArtikel(data) {
+  data = data || {};
+  artNr++;
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.dataset.art = '1';
+  div.innerHTML = `
+    <span class="num">Artikel</span>
+    <button type="button" class="ta-bort" title="Ta bort" onclick="this.parentNode.remove()">×</button>
+    <label>Rubrik</label>
+    <input type="text" class="a-rubrik" value="${(data.title||'').replace(/"/g,'&quot;')}" placeholder="Artikelns rubrik">
+    <label>Ingress (kort sammanfattning)</label>
+    <textarea class="a-ingress" rows="2" placeholder="1–2 meningar">${data.ingress||''}</textarea>
+    <div class="rad2">
+      <div>
+        <label>Kategori</label>
+        <select class="a-kategori">${katOptions(data.category||'Läsvärt')}</select>
+      </div>
+      <div>
+        <label>Källa</label>
+        <input type="text" class="a-kalla" value="${(data.source||'').replace(/"/g,'&quot;')}" placeholder="T.ex. The Free Press">
+      </div>
+    </div>
+    <label>Länk till artikeln</label>
+    <input type="url" class="a-url" value="${data.url||''}" placeholder="https://…">
+  `;
+  document.getElementById('artiklar').appendChild(div);
+}
+
+function laggTillVideo(data) {
+  data = data || {};
+  vidNr++;
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.dataset.vid = '1';
+  div.innerHTML = `
+    <span class="num">Video</span>
+    <button type="button" class="ta-bort" title="Ta bort" onclick="this.parentNode.remove()">×</button>
+    <label>Länk (YouTube/Facebook/X)</label>
+    <input type="url" class="v-url" value="${data.url||''}" placeholder="https://youtu.be/…">
+    <label>Titel</label>
+    <input type="text" class="v-titel" value="${(data.title||'').replace(/"/g,'&quot;')}" placeholder="Klippets titel">
+    <label>Presentation (kort)</label>
+    <textarea class="v-ingress" rows="2" placeholder="Vad handlar klippet om?">${data.ingress||''}</textarea>
+    <label>Längd (valfritt, t.ex. 12:30)</label>
+    <input type="text" class="v-langd" value="${data.duration||''}" placeholder="mm:ss">
+  `;
+  document.getElementById('videor').appendChild(div);
+}
+
+// Starta med två artiklar och ett videofält
+laggTillArtikel(); laggTillArtikel();
+laggTillVideo();
+
+function samlaIn() {
+  const paras = document.getElementById('l-text').value.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+  const leader = {
+    heading: document.getElementById('l-rubrik').value.trim() || 'Redaktören har ordet',
+    paragraphs: paras,
+    name: document.getElementById('l-namn').value.trim(),
+    title: document.getElementById('l-titel').value.trim(),
+    url: document.getElementById('l-url').value.trim()
+  };
+
+  const articles = [];
+  document.querySelectorAll('[data-art]').forEach(el => {
+    const title = el.querySelector('.a-rubrik').value.trim();
+    const url   = el.querySelector('.a-url').value.trim();
+    if (!title && !url) return;
+    articles.push({
+      title,
+      ingress:  el.querySelector('.a-ingress').value.trim(),
+      category: el.querySelector('.a-kategori').value,
+      source:   el.querySelector('.a-kalla').value.trim(),
+      url
+    });
+  });
+
+  const videos = [];
+  document.querySelectorAll('[data-vid]').forEach(el => {
+    const url = el.querySelector('.v-url').value.trim();
+    if (!url) return;
+    videos.push({
+      url,
+      title:    el.querySelector('.v-titel').value.trim(),
+      ingress:  el.querySelector('.v-ingress').value.trim(),
+      duration: el.querySelector('.v-langd').value.trim()
+    });
+  });
+
+  const iRubrik = document.getElementById('i-rubrik').value.trim();
+  const letter = iRubrik ? {
+    heading: iRubrik,
+    body:    document.getElementById('i-text').value.trim(),
+    source:  document.getElementById('i-kalla').value.trim(),
+    url:     document.getElementById('i-url').value.trim()
+  } : null;
+
+  return {
+    type: 'israelnytt',
+    skickad: new Date().toISOString().split('T')[0],
+    leader, articles, videos, letter
+  };
+}
+
+async function skicka() {
+  const knapp = document.getElementById('skicka-knapp');
+  const felBox = document.getElementById('fel-box');
+  felBox.style.display = 'none';
+
+  const payload = samlaIn();
+  if (payload.articles.length === 0 && payload.leader.paragraphs.length === 0) {
+    felBox.textContent = 'Fyll i minst ledartext eller en artikel innan du skickar.';
+    felBox.style.display = 'block';
+    return;
+  }
+
+  knapp.disabled = true;
+  knapp.textContent = 'Skickar…';
+
+  const body = '===VSI-NYHETSBREV-START===\n' + JSON.stringify(payload) + '\n===VSI-NYHETSBREV-SLUT===';
+
+  try {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      subject:   'Israelnyttformular',
+      body:      body,
+      from_name: document.getElementById('redaktor').value.trim() || 'Redaktör'
+    });
+    document.getElementById('formularet').style.display = 'none';
+    document.getElementById('bekraftelse').style.display = 'block';
+  } catch (e) {
+    const forsok = (window._forsok = (window._forsok || 0) + 1);
+    felBox.innerHTML = forsok === 1
+      ? '⚠ Det gick inte att skicka just nu. Vänta en stund och försök igen.'
+      : '⚠ Fortfarande fel. Kontakta <a href="mailto:administration@sverigeisrael.se">administration@sverigeisrael.se</a>.';
+    felBox.style.display = 'block';
+    knapp.disabled = false;
+    knapp.textContent = forsok === 1 ? '↺ Försök igen' : 'Skicka in till redaktionen';
+  }
+}
+</script>
+</body>
+</html>
