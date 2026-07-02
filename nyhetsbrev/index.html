@@ -54,9 +54,9 @@
 
   <div class="body" id="formularet">
     <div class="info-box">
-      Fyll i ledaren, artiklarna (rubrik + ingress + länk + kategori + källa) och eventuella videoklipp.
-      Markera en artikel som kategori <strong>Analys</strong> om den ska ligga i det stora analysblocket överst.
-      Klicka <em>Skicka in</em> längst ner — innehållet landar i VSI Admin-appen.
+      Här skapar du nästa nummer av Israelnytt. Skriv ledaren, lägg till artiklarna och eventuella videoklipp — ett i taget.
+      För varje artikel fyller du i rubrik, en kort text, en länk och väljer ett ämne. När du är klar klickar du på
+      <strong>Skicka in</strong> längst ner, så landar allt i nyhetsbrevsmodulen.
     </div>
 
     <label for="redaktor">Ditt namn (avsändare)</label>
@@ -79,8 +79,6 @@
           <input type="text" id="l-titel" value="Redaktör & vice ordförande">
         </div>
       </div>
-      <label for="l-url">Länk till hela ledaren (knappen "Läs veckans ledare")</label>
-      <input type="url" id="l-url" placeholder="https://…">
     </div>
 
     <!-- ARTIKLAR -->
@@ -196,8 +194,7 @@ function samlaIn() {
     heading: document.getElementById('l-rubrik').value.trim() || 'Redaktören har ordet',
     paragraphs: paras,
     name: document.getElementById('l-namn').value.trim(),
-    title: document.getElementById('l-titel').value.trim(),
-    url: document.getElementById('l-url').value.trim()
+    title: document.getElementById('l-titel').value.trim()
   };
 
   const articles = [];
