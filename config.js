@@ -8,7 +8,7 @@ const EMAILJS_SERVICE_ID  = 'service_ngqkjn8';
 const EMAILJS_TEMPLATE_ID = 'template_cbw0eoi';
 // Bekräftelse-mall för nyhetsbrevsformuläret (To Email = nyhetsbrev@sverigeisrael.se).
 // Skapas i EmailJS-dashboarden; klistra in mall-ID:t här. Tomt = ingen bekräftelse skickas.
-const EMAILJS_CONFIRM_TEMPLATE_ID = '';
+const EMAILJS_CONFIRM_TEMPLATE_ID = 'template_fatfj1a';
 
 // Cloudinary (fil-uppladdning)
 const CLOUDINARY_CLOUD_NAME    = 'dh2npg32u';
