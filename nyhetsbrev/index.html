@@ -262,6 +262,17 @@ async function skicka() {
       body:      body,
       from_name: document.getElementById('redaktor').value.trim() || 'Redaktör'
     });
+    // Bekräftelse till nyhetsbrevsredaktionen (om bekräftelse-mall är konfigurerad)
+    if (typeof EMAILJS_CONFIRM_TEMPLATE_ID !== 'undefined' && EMAILJS_CONFIRM_TEMPLATE_ID) {
+      try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_CONFIRM_TEMPLATE_ID, {
+          subject:   'Israelnytt – nytt innehåll inskickat',
+          body:      `${document.getElementById('redaktor').value.trim() || 'En redaktör'} har skickat in innehåll till nästa Israelnytt: ${payload.articles.length} artiklar, ${payload.videos.length} videoklipp.`,
+          from_name: document.getElementById('redaktor').value.trim() || 'Redaktör',
+          to_email:  'nyhetsbrev@sverigeisrael.se'
+        });
+      } catch (_e) { /* bekräftelse valfri – bryt inte flödet */ }
+    }
     document.getElementById('formularet').style.display = 'none';
     document.getElementById('bekraftelse').style.display = 'block';
   } catch (e) {
