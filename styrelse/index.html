@@ -88,6 +88,59 @@
 
     <div id="sektioner-container"></div>
 
+    <!-- Medlemsansvarig -->
+    <div class="sektion-rubrik" style="margin-top:24px;">
+      <span>&#128231; Ansvarig för utträdesärenden</span>
+      <span style="font-size:10px;font-weight:400;color:#888;">vem kontaktas vid utträde?</span>
+    </div>
+    <div style="font-size:12px;color:#555;margin-bottom:8px;line-height:1.5;">
+      Rikskansliet skickar kopia av utträdesärenden till den person ni anger här. Standard är föreningens ordförande.
+    </div>
+    <div id="medl-ansv-rad" style="display:flex;align-items:center;gap:10px;background:#f9fbfd;border:1px solid #dde4ed;border-radius:6px;padding:9px 12px;margin-bottom:6px;">
+      <div style="flex:1;font-size:13px;font-weight:700;color:#222;" id="medl-ansv-namn">—</div>
+      <div style="font-size:11px;color:#003f7f;font-weight:600;" id="medl-ansv-roll"></div>
+      <button type="button" class="ta-bort-knapp" style="color:#003f7f;font-size:13px;" onclick="öppnaMedlAnsvModal()" title="Byt person">&#9998;</button>
+    </div>
+
+    <!-- Modal för att byta medlemsansvarig -->
+    <div class="modal-overlay" id="medl-ansv-modal">
+      <div class="modal">
+        <div class="modal-header">&#128231; Välj ansvarig för utträdesärenden</div>
+        <input class="modal-sok" id="medl-ansv-sok" type="text" placeholder="Sök namn…" oninput="filteraMedlAnsvLista()">
+        <div class="modal-lista" id="medl-ansv-lista"></div>
+        <div class="modal-knappar">
+          <button class="modal-avbryt" onclick="stängMedlAnsvModal()">Avbryt</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kalenderadministratör -->
+    <div class="sektion-rubrik" style="margin-top:24px;">
+      <span>&#128197; Kalenderadministratör</span>
+      <span style="font-size:10px;font-weight:400;color:#888;">publicerar era evenemang på sverigeisrael.se</span>
+    </div>
+    <div style="font-size:12px;color:#555;margin-bottom:8px;line-height:1.5;">
+      Vem i föreningen ansvarar för att lägga upp era evenemang i kalendern på riksförbundets
+      hemsida <strong>sverigeisrael.se</strong>? Den ni väljer får en länk med instruktioner via mejl.
+    </div>
+    <div id="kal-admin-rad" style="display:flex;align-items:center;gap:10px;background:#f9fbfd;border:1px solid #dde4ed;border-radius:6px;padding:9px 12px;margin-bottom:6px;">
+      <div style="flex:1;font-size:13px;font-weight:700;color:#222;" id="kal-admin-namn">— (ingen vald)</div>
+      <div style="font-size:11px;color:#003f7f;font-weight:600;" id="kal-admin-roll"></div>
+      <button type="button" class="ta-bort-knapp" style="color:#003f7f;font-size:13px;" onclick="öppnaKalAdminModal()" title="Välj person">&#9998;</button>
+    </div>
+
+    <!-- Modal för att välja kalenderadministratör -->
+    <div class="modal-overlay" id="kal-admin-modal">
+      <div class="modal">
+        <div class="modal-header">&#128197; Välj kalenderadministratör</div>
+        <input class="modal-sok" id="kal-admin-sok" type="text" placeholder="Sök namn…" oninput="filteraKalAdminLista()">
+        <div class="modal-lista" id="kal-admin-lista"></div>
+        <div class="modal-knappar">
+          <button class="modal-avbryt" onclick="stängKalAdminModal()">Avbryt</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Bekräftelse -->
     <label class="bekr-rad">
       <input type="checkbox" id="bekr-checkbox" onchange="uppdateraSkickaKnapp()">
@@ -274,6 +327,7 @@ function renderAllt() {
   });
   uppdateraSkickaKnapp();
   uppdateraMaxInfo();
+  _sätt_medl_ansv_till_ordförande();
 }
 
 function taBort(id, roll) {
@@ -419,14 +473,23 @@ async function skickaIn() {
   document.getElementById('fel-box').style.display = 'none';
 
   const år = new Date().getFullYear();
+  // Se till att ordförande sätts om inget explicit val gjorts
+  if (!medlAnsvState) _sätt_medl_ansv_till_ordförande();
+
   const payload = {
-    forening:         urlData.forening || '',
-    inskickat_av_id:  String(urlData.inskickat_av_id || ''),
-    inskickat_av:     urlData.inskickat_av || '',
-    ny_styrelse:      styrelseState.map(p => ({ id: p.id, fn: p.fn, en: p.en, roll: p.roll })),
-    bekraftad:        true,
-    ar:               år,
-    skickad:          new Date().toISOString().split('T')[0]
+    forening:           urlData.forening || '',
+    inskickat_av_id:    String(urlData.inskickat_av_id || ''),
+    inskickat_av:       urlData.inskickat_av || '',
+    ny_styrelse:        styrelseState.map(p => ({ id: p.id, fn: p.fn, en: p.en, roll: p.roll })),
+    bekraftad:          true,
+    ar:                 år,
+    skickad:            new Date().toISOString().split('T')[0],
+    medlemsansvarig:    medlAnsvState
+      ? { id: medlAnsvState.id, fn: medlAnsvState.fn, en: medlAnsvState.en }
+      : null,
+    kalenderadmin:      kalAdminState
+      ? { id: kalAdminState.id, fn: kalAdminState.fn, en: kalAdminState.en, roll: kalAdminState.roll }
+      : null,
   };
 
   const body = '===VSI-STYRELSE-START===\n'
@@ -459,9 +522,136 @@ async function skickaIn() {
   }
 }
 
+// ── Medlemsansvarig ────────────────────────────────────────────────────────────
+let medlAnsvState = null; // { id, fn, en, roll }
+
+function _uppdateraMedlAnsvVisning() {
+  const namnEl = document.getElementById('medl-ansv-namn');
+  const rollEl = document.getElementById('medl-ansv-roll');
+  if (!namnEl || !rollEl) return;
+  if (medlAnsvState) {
+    namnEl.textContent = medlAnsvState.fn + ' ' + medlAnsvState.en;
+    rollEl.textContent = medlAnsvState.roll || '';
+  } else {
+    namnEl.textContent = '—';
+    rollEl.textContent = '';
+  }
+}
+
+function _sätt_medl_ansv_till_ordförande() {
+  const ordf = styrelseState.find(p => p.roll && p.roll.toLowerCase() === 'ordförande');
+  if (ordf && (!medlAnsvState || medlAnsvState._auto)) {
+    medlAnsvState = { id: ordf.id, fn: ordf.fn, en: ordf.en, roll: ordf.roll, _auto: true };
+    _uppdateraMedlAnsvVisning();
+  }
+}
+
+function öppnaMedlAnsvModal() {
+  document.getElementById('medl-ansv-modal').classList.add('aktiv');
+  document.getElementById('medl-ansv-sok').value = '';
+  _filteraMedlAnsvLista('');
+  document.getElementById('medl-ansv-sok').focus();
+}
+
+function stängMedlAnsvModal() {
+  document.getElementById('medl-ansv-modal').classList.remove('aktiv');
+}
+
+function filteraMedlAnsvLista() {
+  _filteraMedlAnsvLista(document.getElementById('medl-ansv-sok').value);
+}
+
+function _filteraMedlAnsvLista(sök) {
+  sök = (sök || '').toLowerCase();
+  const lista = document.getElementById('medl-ansv-lista');
+  const kandidater = styrelseState.filter(p =>
+    !sök || (p.fn + ' ' + p.en).toLowerCase().includes(sök)
+  );
+  if (!kandidater.length) {
+    lista.innerHTML = '<div class="modal-tom">Inga personer i styrelsen ännu</div>';
+    return;
+  }
+  lista.innerHTML = kandidater.map(p => `
+    <div class="modal-person ${medlAnsvState?.id === p.id ? 'vald' : ''}"
+         onclick="_välj_medl_ansv('${esc(p.id)}','${esc(p.fn)}','${esc(p.en)}','${esc(p.roll)}')">
+      <div class="person-avatar" style="width:30px;height:30px;font-size:11px;">${esc(initialer(p.fn,p.en))}</div>
+      <div>
+        <div class="p-namn">${esc(p.fn)} ${esc(p.en)}</div>
+        <div class="p-info">${esc(p.roll)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function _välj_medl_ansv(id, fn, en, roll) {
+  medlAnsvState = { id, fn, en, roll, _auto: false };
+  _uppdateraMedlAnsvVisning();
+  stängMedlAnsvModal();
+}
+
+// ── Kalenderadministratör ──────────────────────────────────────────────────────
+// Helt fristående från medlemsansvarig — kan (men måste inte) vara samma person.
+let kalAdminState = null; // { id, fn, en, roll }
+
+function _uppdateraKalAdminVisning() {
+  const namnEl = document.getElementById('kal-admin-namn');
+  const rollEl = document.getElementById('kal-admin-roll');
+  if (!namnEl || !rollEl) return;
+  if (kalAdminState) {
+    namnEl.textContent = kalAdminState.fn + ' ' + kalAdminState.en;
+    rollEl.textContent = kalAdminState.roll || '';
+  } else {
+    namnEl.textContent = '— (ingen vald)';
+    rollEl.textContent = '';
+  }
+}
+
+function öppnaKalAdminModal() {
+  document.getElementById('kal-admin-modal').classList.add('aktiv');
+  document.getElementById('kal-admin-sok').value = '';
+  _filteraKalAdminLista('');
+  document.getElementById('kal-admin-sok').focus();
+}
+
+function stängKalAdminModal() {
+  document.getElementById('kal-admin-modal').classList.remove('aktiv');
+}
+
+function filteraKalAdminLista() {
+  _filteraKalAdminLista(document.getElementById('kal-admin-sok').value);
+}
+
+function _filteraKalAdminLista(sök) {
+  sök = (sök || '').toLowerCase();
+  const lista = document.getElementById('kal-admin-lista');
+  const kandidater = styrelseState.filter(p =>
+    !sök || (p.fn + ' ' + p.en).toLowerCase().includes(sök)
+  );
+  if (!kandidater.length) {
+    lista.innerHTML = '<div class="modal-tom">Inga personer i styrelsen ännu</div>';
+    return;
+  }
+  lista.innerHTML = kandidater.map(p => `
+    <div class="modal-person ${kalAdminState?.id === p.id ? 'vald' : ''}"
+         onclick="_välj_kal_admin('${esc(p.id)}','${esc(p.fn)}','${esc(p.en)}','${esc(p.roll)}')">
+      <div class="person-avatar" style="width:30px;height:30px;font-size:11px;">${esc(initialer(p.fn,p.en))}</div>
+      <div>
+        <div class="p-namn">${esc(p.fn)} ${esc(p.en)}</div>
+        <div class="p-info">${esc(p.roll)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function _välj_kal_admin(id, fn, en, roll) {
+  kalAdminState = { id, fn, en, roll };
+  _uppdateraKalAdminVisning();
+  stängKalAdminModal();
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 byggSektioner();
 renderAllt();
+// Sätt ordförande som default efter en tick (styrelseState fylls av renderAllt→init)
+setTimeout(_sätt_medl_ansv_till_ordförande, 0);
 </script>
 </body>
 </html>
