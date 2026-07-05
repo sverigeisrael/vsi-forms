@@ -57,6 +57,11 @@
   .bekr-rad { display: flex; align-items: flex-start; gap: 10px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px; padding: 12px 14px; margin-top: 22px; cursor: pointer; }
   .bekr-rad input[type=checkbox] { width: 18px; height: 18px; accent-color: #003f7f; cursor: pointer; flex-shrink: 0; margin-top: 1px; }
   .bekr-rad span { font-size: 13px; color: #333; line-height: 1.5; }
+  /* Föreningssida-fält */
+  .fs-fald { display: flex; flex-direction: column; gap: 3px; }
+  .fs-fald span { font-size: 12px; font-weight: 600; color: #555; }
+  .fs-fald input { border: 1px solid #ccd8e8; border-radius: 4px; padding: 8px 10px; font-size: 14px; }
+  .fs-fald input:focus { outline: none; border-color: #003f7f; }
   /* Skicka */
   .skicka-knapp { display: block; width: 100%; background: #003f7f; color: white; border: none; border-radius: 4px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 14px; }
   .skicka-knapp:hover:not(:disabled) { background: #00529e; }
@@ -139,6 +144,31 @@
           <button class="modal-avbryt" onclick="stängKalAdminModal()">Avbryt</button>
         </div>
       </div>
+    </div>
+
+    <!-- Föreningssida på sverigeisrael.se -->
+    <div class="sektion-rubrik" style="margin-top:24px;">
+      <span>&#127760; Föreningssida på sverigeisrael.se</span>
+      <span style="font-size:10px;font-weight:400;color:#888;">publika uppgifter</span>
+    </div>
+    <div style="font-size:12px;color:#555;margin-bottom:10px;line-height:1.5;">
+      Uppdatera föreningens publika uppgifter på riksförbundets hemsida. Fälten är förifyllda med
+      nuvarande värden – ändra det som behövs. Lämna tomt för att behålla nuvarande värde.
+      Ändringarna granskas innan de publiceras.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <label class="fs-fald"><span>Kontaktperson</span><input id="fs-kontaktperson" type="text"></label>
+      <label class="fs-fald"><span>E-postadress</span><input id="fs-epost" type="email"></label>
+      <label class="fs-fald"><span>Hemsida</span><input id="fs-hemsida" type="url" placeholder="https://…"></label>
+      <label class="fs-fald"><span>Facebook</span><input id="fs-facebook" type="url"></label>
+      <label class="fs-fald"><span>Instagram</span><input id="fs-instagram" type="url"></label>
+      <label class="fs-fald"><span>Youtube</span><input id="fs-youtube" type="url"></label>
+      <label class="fs-fald"><span>Twitter/X</span><input id="fs-twitter" type="url"></label>
+      <label class="fs-fald"><span>Upptagningsområde</span><input id="fs-upptagningsomrade" type="text"></label>
+    </div>
+    <div style="font-size:11px;color:#888;margin-top:8px;">
+      Förkortning <strong id="fs-symbol">—</strong> och anchor <strong id="fs-anchor">—</strong>
+      är systemfält (styr navigeringen) och kan inte ändras här. Ordförande hämtas automatiskt.
     </div>
 
     <!-- Bekräftelse -->
@@ -490,6 +520,16 @@ async function skickaIn() {
     kalenderadmin:      kalAdminState
       ? { id: kalAdminState.id, fn: kalAdminState.fn, en: kalAdminState.en, roll: kalAdminState.roll }
       : null,
+    foreningssida: {
+      kontaktperson:     (document.getElementById('fs-kontaktperson')?.value || '').trim(),
+      epost:             (document.getElementById('fs-epost')?.value || '').trim(),
+      hemsida:           (document.getElementById('fs-hemsida')?.value || '').trim(),
+      facebook:          (document.getElementById('fs-facebook')?.value || '').trim(),
+      instagram:         (document.getElementById('fs-instagram')?.value || '').trim(),
+      youtube:           (document.getElementById('fs-youtube')?.value || '').trim(),
+      twitter:           (document.getElementById('fs-twitter')?.value || '').trim(),
+      upptagningsomrade: (document.getElementById('fs-upptagningsomrade')?.value || '').trim(),
+    },
   };
 
   const body = '===VSI-STYRELSE-START===\n'
@@ -647,9 +687,24 @@ function _välj_kal_admin(id, fn, en, roll) {
   stängKalAdminModal();
 }
 
+// ── Föreningssida – förifyll från WP-värden (om appen skickat med dem) ──────────
+function _förifyllFöreningssida() {
+  const fs = urlData.foreningssida || {};
+  const map = { kontaktperson:'fs-kontaktperson', epost:'fs-epost', hemsida:'fs-hemsida',
+    facebook:'fs-facebook', instagram:'fs-instagram', youtube:'fs-youtube',
+    twitter:'fs-twitter', upptagningsomrade:'fs-upptagningsomrade' };
+  Object.entries(map).forEach(([k, id]) => {
+    const el = document.getElementById(id);
+    if (el && fs[k] != null) el.value = fs[k];
+  });
+  const sym = document.getElementById('fs-symbol'); if (sym && fs.symbol) sym.textContent = fs.symbol;
+  const anc = document.getElementById('fs-anchor'); if (anc && fs.anchor) anc.textContent = fs.anchor;
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 byggSektioner();
 renderAllt();
+_förifyllFöreningssida();
 // Sätt ordförande som default efter en tick (styrelseState fylls av renderAllt→init)
 setTimeout(_sätt_medl_ansv_till_ordförande, 0);
 </script>
