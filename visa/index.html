@@ -109,7 +109,22 @@ SEKTIONER.forEach(sek => {
   innehall.appendChild(div);
 });
 
-if (!styrelse.length) {
+// Kalenderadministratör (om angiven) — den som publicerar föreningens evenemang på sverigeisrael.se
+const kalAdmin = data.kalenderadmin;
+if (kalAdmin && (kalAdmin.fn || kalAdmin.en)) {
+  const init = ((kalAdmin.fn||'')[0]||'') + ((kalAdmin.en||'')[0]||'');
+  const div = document.createElement('div');
+  div.className = 'sektion';
+  div.innerHTML = '<div class="sektion-rubrik">📅 Kalenderadministratör</div>'
+    + '<div class="person-rad">'
+    + '<div class="avatar">' + init.toUpperCase() + '</div>'
+    + '<div><div class="person-namn">' + (kalAdmin.fn||'') + ' ' + (kalAdmin.en||'') + '</div>'
+    + (kalAdmin.roll ? '<div class="person-roll">' + kalAdmin.roll + '</div>' : '')
+    + '</div></div>';
+  innehall.appendChild(div);
+}
+
+if (!innehall.children.length) {
   innehall.innerHTML = '<div class="sektion"><p class="tom">Inga uppgifter registrerade.</p></div>';
 }
 </script>
