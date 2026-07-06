@@ -205,6 +205,16 @@
       <label>Välj roll:</label>
       <select id="modal-roll-select"></select>
     </div>
+    <details id="modal-extern" style="margin-top:12px;border-top:1px solid #e8f0f8;padding-top:10px;">
+      <summary style="font-size:12px;color:#003f7f;cursor:pointer;font-weight:600;">➕ Lägg till extern person (medlem i annan förening)</summary>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+        <div style="font-size:11px;color:#666;">Ange personens <strong>MedlemsID</strong> och <strong>efternamn</strong> (och gärna förnamn).</div>
+        <input id="extern-medlemsid" type="text" placeholder="MedlemsID (t.ex. 6357)" style="border:1px solid #ccd8e8;border-radius:4px;padding:8px 10px;font-size:14px;">
+        <input id="extern-fornamn" type="text" placeholder="Förnamn" style="border:1px solid #ccd8e8;border-radius:4px;padding:8px 10px;font-size:14px;">
+        <input id="extern-efternamn" type="text" placeholder="Efternamn" style="border:1px solid #ccd8e8;border-radius:4px;padding:8px 10px;font-size:14px;">
+        <button class="modal-lagg-till" style="flex:none;" onclick="läggTillExtern()">Lägg till extern person</button>
+      </div>
+    </details>
     <div id="modal-konflikt-varn" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;padding:8px 12px;font-size:12px;color:#856404;margin-top:10px;"></div>
     <div class="modal-knappar">
       <button class="modal-avbryt" onclick="stängModal()">Avbryt</button>
@@ -490,6 +500,25 @@ function läggTillPerson() {
   renderAllt();
 }
 
+// Lägg till en EXTERN person (medlem i annan förening) via MedlemsID + efternamn.
+// Fungerar för alla roller. Backend slår upp MedlemsID i registret och sätter extern_roller.
+function läggTillExtern() {
+  const id = (document.getElementById('extern-medlemsid').value || '').trim();
+  const fn = (document.getElementById('extern-fornamn').value || '').trim();
+  const en = (document.getElementById('extern-efternamn').value || '').trim();
+  if (!id || !en) { alert('Ange minst MedlemsID och efternamn för den externa personen.'); return; }
+  const konfliktSek = new Set(KONFLIKTER[aktivSektion] || [aktivSektion]);
+  if (styrelseState.find(p => String(p.id) === String(id) && konfliktSek.has(p.sektion))) {
+    alert(`Person med MedlemsID ${id} är redan tillagd i en roll som krockar med denna.`);
+    return;
+  }
+  const roll = document.getElementById('modal-roll-select').value;
+  styrelseState.push({ id, fn, en, roll, sektion: aktivSektion, extern: true });
+  ['extern-medlemsid','extern-fornamn','extern-efternamn'].forEach(i => { const el = document.getElementById(i); if (el) el.value = ''; });
+  stängModal();
+  renderAllt();
+}
+
 // ── Skicka ────────────────────────────────────────────────────────────────────
 function uppdateraSkickaKnapp() {
   const bekr = document.getElementById('bekr-checkbox').checked;
@@ -510,7 +539,7 @@ async function skickaIn() {
     forening:           urlData.forening || '',
     inskickat_av_id:    String(urlData.inskickat_av_id || ''),
     inskickat_av:       urlData.inskickat_av || '',
-    ny_styrelse:        styrelseState.map(p => ({ id: p.id, fn: p.fn, en: p.en, roll: p.roll })),
+    ny_styrelse:        styrelseState.map(p => ({ id: p.id, fn: p.fn, en: p.en, roll: p.roll, ...(p.extern ? { extern: true } : {}) })),
     bekraftad:          true,
     ar:                 år,
     skickad:            new Date().toISOString().split('T')[0],
