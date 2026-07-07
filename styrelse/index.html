@@ -57,6 +57,10 @@
   .bekr-rad { display: flex; align-items: flex-start; gap: 10px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px; padding: 12px 14px; margin-top: 22px; cursor: pointer; }
   .bekr-rad input[type=checkbox] { width: 18px; height: 18px; accent-color: #003f7f; cursor: pointer; flex-shrink: 0; margin-top: 1px; }
   .bekr-rad span { font-size: 13px; color: #333; line-height: 1.5; }
+  /* Föreningsmejl-toggle per person */
+  .fm-toggle { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #557; cursor: pointer; margin-right: 8px; white-space: nowrap; }
+  .fm-toggle input[type=checkbox] { width: 15px; height: 15px; accent-color: #003f7f; cursor: pointer; }
+  .fm-varning { background: #fff4e5; border: 1px solid #f0c07a; color: #7a4a00; border-radius: 6px; padding: 9px 13px; font-size: 12px; margin-top: 16px; line-height: 1.45; }
   /* Föreningssida-fält */
   .fs-fald { display: flex; flex-direction: column; gap: 3px; }
   .fs-fald span { font-size: 12px; font-weight: 600; color: #555; }
@@ -170,6 +174,10 @@
     <div style="font-size:11px;color:#888;margin-top:8px;">
       Förkortning <strong id="fs-symbol">—</strong> och anchor <strong id="fs-anchor">—</strong>
       är systemfält (styr navigeringen) och kan inte ändras här. Ordförande hämtas automatiskt.
+    </div>
+
+    <div class="fm-varning" id="fm-varning" style="display:none;">
+      &#9888;&#65039; Minst en person måste ha <strong>Föreningsmejl</strong> ibockad — de som ska ta emot post som skickas till föreningens adress.
     </div>
 
     <!-- Bekräftelse -->
@@ -333,7 +341,7 @@ let styrelseState = [];
 
 (urlData.styrelse || []).forEach(p => {
   const sek = sektion_for_roll(p.roll);
-  styrelseState.push({ id: String(p.id || ''), fn: p.fn || '', en: p.en || '', roll: p.roll || '', sektion: sek });
+  styrelseState.push({ id: String(p.id || ''), fn: p.fn || '', en: p.en || '', roll: p.roll || '', sektion: sek, foreningsmejl: p.foreningsmejl !== false });
 });
 
 function initialer(fn, en) {
@@ -362,6 +370,10 @@ function renderAllt() {
           <div class="person-namn">${esc(p.fn)} ${esc(p.en)}</div>
           <div class="person-roll">${esc(p.roll || '—')}</div>
         </div>
+        <label class="fm-toggle" title="Bocka i om personen ska ta emot mejl som skickas till föreningens adress">
+          <input type="checkbox" ${p.foreningsmejl ? 'checked' : ''} onchange="toggleFöreningsmejl('${esc(p.id)}','${esc(p.roll)}',this.checked)">
+          <span>Föreningsmejl</span>
+        </label>
         <button class="ta-bort-knapp" onclick="taBort('${esc(p.id)}','${esc(p.roll)}')" title="Ta bort">&#215;</button>
       </div>`;
     }).join('');
@@ -374,6 +386,11 @@ function renderAllt() {
 function taBort(id, roll) {
   styrelseState = styrelseState.filter(p => !(p.id === id && p.roll === roll));
   renderAllt();
+}
+
+function toggleFöreningsmejl(id, roll, checked) {
+  styrelseState.forEach(p => { if (p.id === id && p.roll === roll) p.foreningsmejl = checked; });
+  uppdateraSkickaKnapp();
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
@@ -496,7 +513,7 @@ function läggTillPerson() {
   }
   varnEl.style.display = 'none';
   const roll = document.getElementById('modal-roll-select').value;
-  styrelseState.push({ ...valdPerson, roll, sektion: sek });
+  styrelseState.push({ ...valdPerson, roll, sektion: sek, foreningsmejl: valdPerson.foreningsmejl !== false });
   stängModal();
   renderAllt();
 }
@@ -514,7 +531,7 @@ function läggTillExtern() {
     return;
   }
   const roll = document.getElementById('modal-roll-select').value;
-  styrelseState.push({ id, fn, en, roll, sektion: aktivSektion, extern: true });
+  styrelseState.push({ id, fn, en, roll, sektion: aktivSektion, extern: true, foreningsmejl: true });
   ['extern-medlemsid','extern-fornamn','extern-efternamn'].forEach(i => { const el = document.getElementById(i); if (el) el.value = ''; });
   stängModal();
   renderAllt();
@@ -523,7 +540,10 @@ function läggTillExtern() {
 // ── Skicka ────────────────────────────────────────────────────────────────────
 function uppdateraSkickaKnapp() {
   const bekr = document.getElementById('bekr-checkbox').checked;
-  document.getElementById('skicka-knapp').disabled = !bekr;
+  const minstEnFm = styrelseState.some(p => p.foreningsmejl);
+  document.getElementById('skicka-knapp').disabled = !(bekr && minstEnFm);
+  const varn = document.getElementById('fm-varning');
+  if (varn) varn.style.display = (styrelseState.length && !minstEnFm) ? 'block' : 'none';
 }
 
 async function skickaIn() {
@@ -540,7 +560,7 @@ async function skickaIn() {
     forening:           urlData.forening || '',
     inskickat_av_id:    String(urlData.inskickat_av_id || ''),
     inskickat_av:       urlData.inskickat_av || '',
-    ny_styrelse:        styrelseState.map(p => ({ id: p.id, fn: p.fn, en: p.en, roll: p.roll, ...(p.extern ? { extern: true } : {}) })),
+    ny_styrelse:        styrelseState.map(p => ({ id: p.id, fn: p.fn, en: p.en, roll: p.roll, foreningsmejl: p.foreningsmejl !== false, ...(p.extern ? { extern: true } : {}) })),
     bekraftad:          true,
     ar:                 år,
     skickad:            new Date().toISOString().split('T')[0],
