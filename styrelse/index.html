@@ -66,6 +66,7 @@
   .fs-fald span { font-size: 12px; font-weight: 600; color: #555; }
   .fs-fald input { border: 1px solid #ccd8e8; border-radius: 4px; padding: 8px 10px; font-size: 14px; }
   .fs-fald input:focus { outline: none; border-color: #003f7f; }
+  .fs-fald input[readonly] { background: #eef2f7; color: #667; cursor: not-allowed; border-style: dashed; }
   /* Skicka */
   .skicka-knapp { display: block; width: 100%; background: #003f7f; color: white; border: none; border-radius: 4px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 14px; }
   .skicka-knapp:hover:not(:disabled) { background: #00529e; }
@@ -78,6 +79,34 @@
   .bekraftelse p { color: #555; font-size: 14px; line-height: 1.6; }
   .footer { background: #f0f4f8; padding: 10px 24px; border-top: 1px solid #dde4ec; font-size: 11px; color: #888; text-align: center; }
   .footer a { color: #888; }
+  /* (C) 3-stegsguide */
+  .guide-box { background:#eef4fb; border:1px solid #cfe0f2; border-radius:8px; padding:12px 16px; margin-bottom:18px; }
+  .guide-titel { font-size:11px; font-weight:700; color:#003f7f; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+  .guide-steg { margin:0; padding-left:20px; font-size:13px; color:#333; line-height:1.7; }
+  /* (E) Sektionshuvud + taggar */
+  .sektion-huvud { display:flex; align-items:center; justify-content:space-between; font-size:15px; font-weight:700; color:#003f7f; margin:6px 0 10px; }
+  .oblig-tag { font-size:9px; font-weight:700; color:#0a7a3a; background:#e5f6ec; border:1px solid #b6e2c7; border-radius:10px; padding:2px 9px; text-transform:uppercase; letter-spacing:.3px; }
+  .valfri-tag { font-size:9px; font-weight:700; color:#8a6d00; background:#fdf3d6; border:1px solid #ecd89a; border-radius:8px; padding:1px 7px; text-transform:uppercase; }
+  .valfri-avdelare { display:flex; align-items:center; text-align:center; color:#aaa; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; margin:22px 0 10px; }
+  .valfri-avdelare::before, .valfri-avdelare::after { content:''; flex:1; border-top:1px solid #e2e8f1; }
+  .valfri-avdelare span { padding:0 12px; }
+  /* (B) Föreningsmejl – dold som standard, visas via växeln */
+  .fm-toggle { display:none; }
+  .visa-fm .fm-toggle { display:flex; }
+  .fm-vaxel { display:block; width:100%; text-align:left; background:#f5f8fc; border:1px solid #dbe6f2; border-radius:6px; padding:10px 13px; font-size:12px; color:#003f7f; font-weight:600; cursor:pointer; margin-top:12px; }
+  .fm-vaxel-info { color:#8a97a6; font-weight:400; }
+  /* (A) Valfria hopfällbara avsnitt */
+  .valfri-sektion { border:1px solid #e2e8f1; border-radius:8px; margin-bottom:8px; overflow:hidden; }
+  .valfri-sektion > summary { list-style:none; cursor:pointer; padding:11px 14px; font-size:13px; font-weight:700; color:#333; display:flex; align-items:center; gap:8px; background:#fafbfd; }
+  .valfri-sektion > summary::-webkit-details-marker { display:none; }
+  .valfri-sektion > summary::before { content:'\25B8'; color:#9ab; font-size:12px; transition:transform .15s; }
+  .valfri-sektion[open] > summary::before { transform:rotate(90deg); }
+  .sum-varde { font-weight:400; color:#8a97a6; font-size:12px; margin-left:auto; }
+  .valfri-innehall { padding:4px 14px 14px; }
+  .valfri-hjalp { font-size:12px; color:#555; line-height:1.5; margin-bottom:8px; }
+  /* (D) Klistrad skicka-footer */
+  .skicka-footer { position:sticky; bottom:0; background:#fff; border-top:1px solid #e2e8f1; padding:12px 0 6px; margin-top:18px; box-shadow:0 -4px 12px rgba(0,0,0,.05); }
+  .skicka-orsak { font-size:11px; color:#b26a00; text-align:center; margin-top:6px; min-height:14px; }
 </style>
 </head>
 <body>
@@ -90,26 +119,43 @@
     <p id="header-forening">Vänskapsförbundet Sverige-Israel</p>
   </div>
   <div class="body" id="formularet">
-    <div class="info-box">
-      Granska styrelsens sammansättning för din förening. Ta bort personer som lämnat och lägg till nya.
-      När styrelsen är komplett — bekräfta och skicka in.
+    <div class="guide-box">
+      <div class="guide-titel">Så här gör du</div>
+      <ol class="guide-steg">
+        <li><strong>Kontrollera styrelsen</strong> – ta bort dem som lämnat, lägg till nya.</li>
+        <li><span class="valfri-tag">Valfritt</span> ansvariga &amp; publika uppgifter.</li>
+        <li><strong>Bekräfta &amp; skicka in.</strong></li>
+      </ol>
     </div>
 
+    <div class="sektion-huvud">
+      <span>&#128101; Styrelsen</span>
+      <span class="oblig-tag">Obligatoriskt</span>
+    </div>
     <div id="sektioner-container"></div>
 
-    <!-- Medlemsansvarig -->
-    <div class="sektion-rubrik" style="margin-top:24px;">
-      <span>&#128231; Medlemsansvarig</span>
-      <span style="font-size:10px;font-weight:400;color:#888;">får mejl bl.a. vid utträden</span>
+    <!-- (B) Föreningsmejl-växel – kryssrutorna per person är dolda tills man öppnar -->
+    <button type="button" class="fm-vaxel" id="fm-vaxel" onclick="växlaFöreningsmejl()">
+      &#9656; &#128233; Vilka får föreningsmejl? <span class="fm-vaxel-info" id="fm-vaxel-info">(alla just nu)</span>
+    </button>
+    <div class="fm-varning" id="fm-varning" style="display:none;">
+      &#9888;&#65039; Minst en person måste ha <strong>Föreningsmejl</strong> ibockad — de som ska ta emot post till föreningens adress.
     </div>
-    <div style="font-size:12px;color:#555;margin-bottom:8px;line-height:1.5;">
-      Den medlemsansvarige får mejl bl.a. när medlemmar utträder ur er förening. Om ni inte ändrar detta är det föreningens ordförande som får mejlet.
-    </div>
-    <div id="medl-ansv-rad" style="display:flex;align-items:center;gap:10px;background:#f9fbfd;border:1px solid #dde4ed;border-radius:6px;padding:9px 12px;margin-bottom:6px;">
-      <div style="flex:1;font-size:13px;font-weight:700;color:#222;" id="medl-ansv-namn">—</div>
-      <div style="font-size:11px;color:#003f7f;font-weight:600;" id="medl-ansv-roll"></div>
-      <button type="button" class="ta-bort-knapp" style="color:#003f7f;font-size:13px;" onclick="öppnaMedlAnsvModal()" title="Byt person">&#9998;</button>
-    </div>
+
+    <div class="valfri-avdelare"><span>Valfritt</span></div>
+
+    <!-- (A) Medlemsansvarig -->
+    <details class="valfri-sektion">
+      <summary>&#128231; Medlemsansvarig <span class="sum-varde" id="sum-medl-ansv">ordförande (standard)</span></summary>
+      <div class="valfri-innehall">
+        <div class="valfri-hjalp">Får mejl bl.a. när medlemmar tillkommer eller utträder. Ändrar ni inget är det ordföranden som får mejlet.</div>
+        <div id="medl-ansv-rad" style="display:flex;align-items:center;gap:10px;background:#f9fbfd;border:1px solid #dde4ed;border-radius:6px;padding:9px 12px;">
+          <div style="flex:1;font-size:13px;font-weight:700;color:#222;" id="medl-ansv-namn">—</div>
+          <div style="font-size:11px;color:#003f7f;font-weight:600;" id="medl-ansv-roll"></div>
+          <button type="button" class="ta-bort-knapp" style="color:#003f7f;font-size:13px;" onclick="öppnaMedlAnsvModal()" title="Byt person">&#9998;</button>
+        </div>
+      </div>
+    </details>
 
     <!-- Modal för att byta medlemsansvarig -->
     <div class="modal-overlay" id="medl-ansv-modal">
@@ -123,20 +169,18 @@
       </div>
     </div>
 
-    <!-- Kalenderadministratör -->
-    <div class="sektion-rubrik" style="margin-top:24px;">
-      <span>&#128197; Kalenderadministratör</span>
-      <span style="font-size:10px;font-weight:400;color:#888;">publicerar era evenemang på sverigeisrael.se</span>
-    </div>
-    <div style="font-size:12px;color:#555;margin-bottom:8px;line-height:1.5;">
-      Vem i föreningen ansvarar för att lägga upp era evenemang i kalendern på riksförbundets
-      hemsida <strong>sverigeisrael.se</strong>? Den ni väljer får en länk med instruktioner via mejl.
-    </div>
-    <div id="kal-admin-rad" style="display:flex;align-items:center;gap:10px;background:#f9fbfd;border:1px solid #dde4ed;border-radius:6px;padding:9px 12px;margin-bottom:6px;">
-      <div style="flex:1;font-size:13px;font-weight:700;color:#222;" id="kal-admin-namn">— (ingen vald)</div>
-      <div style="font-size:11px;color:#003f7f;font-weight:600;" id="kal-admin-roll"></div>
-      <button type="button" class="ta-bort-knapp" style="color:#003f7f;font-size:13px;" onclick="öppnaKalAdminModal()" title="Välj person">&#9998;</button>
-    </div>
+    <!-- (A) Kalenderadministratör -->
+    <details class="valfri-sektion">
+      <summary>&#128197; Kalenderadministratör <span class="sum-varde" id="sum-kal-admin">ingen vald</span></summary>
+      <div class="valfri-innehall">
+        <div class="valfri-hjalp">Vem lägger upp era evenemang i kalendern på <strong>sverigeisrael.se</strong>? Den ni väljer får en länk med instruktioner via mejl.</div>
+        <div id="kal-admin-rad" style="display:flex;align-items:center;gap:10px;background:#f9fbfd;border:1px solid #dde4ed;border-radius:6px;padding:9px 12px;">
+          <div style="flex:1;font-size:13px;font-weight:700;color:#222;" id="kal-admin-namn">— (ingen vald)</div>
+          <div style="font-size:11px;color:#003f7f;font-weight:600;" id="kal-admin-roll"></div>
+          <button type="button" class="ta-bort-knapp" style="color:#003f7f;font-size:13px;" onclick="öppnaKalAdminModal()" title="Välj person">&#9998;</button>
+        </div>
+      </div>
+    </details>
 
     <!-- Modal för att välja kalenderadministratör -->
     <div class="modal-overlay" id="kal-admin-modal">
@@ -150,45 +194,39 @@
       </div>
     </div>
 
-    <!-- Era uppgifter på lokalföreningssidan på sverigeisrael.se -->
-    <div class="sektion-rubrik" style="margin-top:24px;">
-      <span>&#127760; Era uppgifter på lokalföreningssidan på sverigeisrael.se</span>
-      <span style="font-size:10px;font-weight:400;color:#888;">publika uppgifter</span>
-    </div>
-    <div style="font-size:12px;color:#555;margin-bottom:10px;line-height:1.5;">
-      Uppdatera föreningens publika uppgifter på riksförbundets hemsida. Fälten är förifyllda med
-      nuvarande värden – ändra det som behövs. Lämna tomt för att behålla nuvarande värde.
-      Ändringarna granskas innan de publiceras. Vissa uppgifter läggs in automatiskt och behöver
-      ni inte hantera själva.
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <label class="fs-fald"><span>Kontaktperson</span><input id="fs-kontaktperson" type="text"></label>
-      <label class="fs-fald"><span>E-postadress</span><input id="fs-epost" type="email"></label>
-      <label class="fs-fald"><span>Hemsida</span><input id="fs-hemsida" type="url" placeholder="https://…"></label>
-      <label class="fs-fald"><span>Facebook</span><input id="fs-facebook" type="url"></label>
-      <label class="fs-fald"><span>Instagram</span><input id="fs-instagram" type="url"></label>
-      <label class="fs-fald"><span>Youtube</span><input id="fs-youtube" type="url"></label>
-      <label class="fs-fald"><span>Twitter/X</span><input id="fs-twitter" type="url"></label>
-      <label class="fs-fald"><span>Upptagningsområde</span><input id="fs-upptagningsomrade" type="text"></label>
-    </div>
-    <div style="font-size:11px;color:#888;margin-top:8px;">
-      Förkortning <strong id="fs-symbol">—</strong> och anchor <strong id="fs-anchor">—</strong>
-      är systemfält (styr navigeringen) och kan inte ändras här. Ordförande hämtas automatiskt.
-    </div>
+    <!-- (A) Era uppgifter på lokalföreningssidan -->
+    <details class="valfri-sektion">
+      <summary>&#127760; Uppgifter på lokalföreningssidan <span class="sum-varde">publika uppgifter</span></summary>
+      <div class="valfri-innehall">
+        <div class="valfri-hjalp">Föreningens publika uppgifter på sverigeisrael.se. Förifyllt – ändra det som behövs, lämna tomt för att behålla. Granskas innan publicering.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label class="fs-fald"><span>Kontaktperson</span><input id="fs-kontaktperson" type="text"></label>
+          <label class="fs-fald"><span>E-postadress <em style="font-weight:400;color:#888;">(föreningens fasta adress – kan ej ändras)</em></span><input id="fs-epost" type="email" readonly></label>
+          <label class="fs-fald"><span>Hemsida</span><input id="fs-hemsida" type="url" placeholder="https://…"></label>
+          <label class="fs-fald"><span>Facebook</span><input id="fs-facebook" type="url"></label>
+          <label class="fs-fald"><span>Instagram</span><input id="fs-instagram" type="url"></label>
+          <label class="fs-fald"><span>Youtube</span><input id="fs-youtube" type="url"></label>
+          <label class="fs-fald"><span>Twitter/X</span><input id="fs-twitter" type="url"></label>
+          <label class="fs-fald"><span>Upptagningsområde</span><input id="fs-upptagningsomrade" type="text"></label>
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:8px;">
+          Förkortning <strong id="fs-symbol">—</strong> och anchor <strong id="fs-anchor">—</strong>
+          är systemfält (styr navigeringen) och kan inte ändras här. Ordförande hämtas automatiskt.
+        </div>
+      </div>
+    </details>
 
-    <div class="fm-varning" id="fm-varning" style="display:none;">
-      &#9888;&#65039; Minst en person måste ha <strong>Föreningsmejl</strong> ibockad — de som ska ta emot post som skickas till föreningens adress.
+    <!-- (D) Klistrad footer -->
+    <div class="skicka-footer">
+      <label class="bekr-rad">
+        <input type="checkbox" id="bekr-checkbox" onchange="uppdateraSkickaKnapp()">
+        <span>Jag bekräftar att detta är styrelsens <strong>slutliga sammansättning</strong> efter föreningens årsmöte i år.</span>
+      </label>
+      <button class="skicka-knapp" id="skicka-knapp" onclick="skickaIn()" disabled>
+        Skicka in styrelselistan
+      </button>
+      <div class="skicka-orsak" id="skicka-orsak"></div>
     </div>
-
-    <!-- Bekräftelse -->
-    <label class="bekr-rad">
-      <input type="checkbox" id="bekr-checkbox" onchange="uppdateraSkickaKnapp()">
-      <span>Jag bekräftar att detta är styrelsens <strong>slutliga sammansättning</strong> efter föreningens årsmöte i år.</span>
-    </label>
-
-    <button class="skicka-knapp" id="skicka-knapp" onclick="skickaIn()" disabled>
-      Skicka in styrelselistan
-    </button>
     <div class="fel-box" id="fel-box"></div>
   </div>
 
@@ -393,6 +431,19 @@ function toggleFöreningsmejl(id, roll, checked) {
   uppdateraSkickaKnapp();
 }
 
+function _uppdFmInfo() {
+  const info = document.getElementById('fm-vaxel-info');
+  if (!info) return;
+  const på = document.getElementById('formularet').classList.contains('visa-fm');
+  const valda = styrelseState.filter(p => p.foreningsmejl).length, tot = styrelseState.length;
+  info.textContent = på ? '(bocka i/ur nedan)' : (tot && valda === tot ? `(alla ${tot} får)` : `(${valda} av ${tot} får)`);
+}
+
+function växlaFöreningsmejl() {
+  document.getElementById('formularet').classList.toggle('visa-fm');
+  _uppdFmInfo();
+}
+
 // ── Modal ─────────────────────────────────────────────────────────────────────
 let aktivSektion = 'ledamot';
 let valdPerson   = null;
@@ -544,6 +595,10 @@ function uppdateraSkickaKnapp() {
   document.getElementById('skicka-knapp').disabled = !(bekr && minstEnFm);
   const varn = document.getElementById('fm-varning');
   if (varn) varn.style.display = (styrelseState.length && !minstEnFm) ? 'block' : 'none';
+  const orsak = document.getElementById('skicka-orsak');
+  if (orsak) orsak.textContent = !minstEnFm ? 'Minst en person måste ha Föreningsmejl ibockad.'
+    : !bekr ? 'Bocka i bekräftelserutan ovan för att skicka.' : '';
+  _uppdFmInfo();
 }
 
 async function skickaIn() {
@@ -626,6 +681,10 @@ function _uppdateraMedlAnsvVisning() {
     namnEl.textContent = '—';
     rollEl.textContent = '';
   }
+  const sum = document.getElementById('sum-medl-ansv');
+  if (sum) sum.textContent = medlAnsvState
+    ? (medlAnsvState.fn + ' ' + medlAnsvState.en + (medlAnsvState._auto ? ' (standard)' : ''))
+    : 'ordförande (standard)';
 }
 
 function _sätt_medl_ansv_till_ordförande() {
@@ -693,6 +752,8 @@ function _uppdateraKalAdminVisning() {
     namnEl.textContent = '— (ingen vald)';
     rollEl.textContent = '';
   }
+  const sum = document.getElementById('sum-kal-admin');
+  if (sum) sum.textContent = kalAdminState ? (kalAdminState.fn + ' ' + kalAdminState.en) : 'ingen vald';
 }
 
 function öppnaKalAdminModal() {
@@ -740,13 +801,16 @@ function _välj_kal_admin(id, fn, en, roll) {
 // ── Föreningssida – förifyll från WP-värden (om appen skickat med dem) ──────────
 function _förifyllFöreningssida() {
   const fs = urlData.foreningssida || {};
-  const map = { kontaktperson:'fs-kontaktperson', epost:'fs-epost', hemsida:'fs-hemsida',
+  const map = { kontaktperson:'fs-kontaktperson', hemsida:'fs-hemsida',
     facebook:'fs-facebook', instagram:'fs-instagram', youtube:'fs-youtube',
     twitter:'fs-twitter', upptagningsomrade:'fs-upptagningsomrade' };
   Object.entries(map).forEach(([k, id]) => {
     const el = document.getElementById(id);
     if (el && fs[k] != null) el.value = fs[k];
   });
+  // E-postadressen är FAST (föreningens föreningsadress) – skrivskyddad
+  const ep = document.getElementById('fs-epost');
+  if (ep) { ep.value = urlData.foreningsadress || fs.epost || ''; ep.readOnly = true; }
   const sym = document.getElementById('fs-symbol'); if (sym && fs.symbol) sym.textContent = fs.symbol;
   const anc = document.getElementById('fs-anchor'); if (anc && fs.anchor) anc.textContent = fs.anchor;
 }
