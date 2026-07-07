@@ -691,7 +691,12 @@ async function skickaIn() {
 }
 
 // ── Medlemsansvarig ────────────────────────────────────────────────────────────
-let medlAnsvState = null; // { id, fn, en, roll }
+// Ladda befintlig medlemsansvarig från länken (annars null → default ordförande).
+// _auto:false skyddar den från att skrivas över av ordförande-defaulten.
+let medlAnsvState = urlData.medlemsansvarig
+  ? { id: String(urlData.medlemsansvarig.id || ''), fn: urlData.medlemsansvarig.fn || '',
+      en: urlData.medlemsansvarig.en || '', roll: urlData.medlemsansvarig.roll || '', _auto: false }
+  : null; // { id, fn, en, roll }
 
 function _uppdateraMedlAnsvVisning() {
   const namnEl = document.getElementById('medl-ansv-namn');
@@ -762,7 +767,11 @@ function _välj_medl_ansv(id, fn, en, roll) {
 
 // ── Kalenderadministratör ──────────────────────────────────────────────────────
 // Helt fristående från medlemsansvarig — kan (men måste inte) vara samma person.
-let kalAdminState = null; // { id, fn, en, roll }
+// Ladda befintlig kalenderadministratör från länken (annars null → ingen vald).
+let kalAdminState = urlData.kalenderadmin
+  ? { id: String(urlData.kalenderadmin.id || ''), fn: urlData.kalenderadmin.fn || '',
+      en: urlData.kalenderadmin.en || '', roll: urlData.kalenderadmin.roll || '' }
+  : null; // { id, fn, en, roll }
 
 function _uppdateraKalAdminVisning() {
   const namnEl = document.getElementById('kal-admin-namn');
@@ -856,6 +865,8 @@ function _tillämpaVisningsläge() {
 byggSektioner();
 renderAllt();
 _förifyllFöreningssida();
+_uppdateraMedlAnsvVisning();   // visa inladdad medlemsansvarig (annars uppdateras av ordförande-default)
+_uppdateraKalAdminVisning();   // visa inladdad kalenderadministratör
 _tillämpaVisningsläge();
 // Sätt ordförande som default efter en tick (styrelseState fylls av renderAllt→init)
 setTimeout(_sätt_medl_ansv_till_ordförande, 0);
