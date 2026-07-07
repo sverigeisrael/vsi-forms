@@ -311,7 +311,7 @@ const SEKTIONER = [
 ];
 
 function sektion_for_roll(roll) {
-  const r = (roll || '').toLowerCase();
+  const r = (roll || '').toLowerCase().replace(/\s+/g, ' ').trim();  // robust mot dubbla mellanslag
   if (['ordförande','vice ordförande','kassör','sekreterare'].includes(r)) return 'nf';
   if (['ledamot'].includes(r))                                             return 'ledamot';
   if (['ersättare','styrelseersättare'].includes(r))                       return 'ersattare';
