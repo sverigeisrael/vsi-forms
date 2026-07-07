@@ -107,6 +107,21 @@
   /* (D) Klistrad skicka-footer */
   .skicka-footer { position:sticky; bottom:0; background:#fff; border-top:1px solid #e2e8f1; padding:12px 0 6px; margin-top:18px; box-shadow:0 -4px 12px rgba(0,0,0,.05); }
   .skicka-orsak { font-size:11px; color:#b26a00; text-align:center; margin-top:6px; min-height:14px; }
+  /* Info: länken kan delas för visning */
+  .lank-info { background:#f5f8fc; border:1px dashed #cfe0f2; border-radius:6px; padding:8px 12px; font-size:11px; color:#4a5a6a; margin-bottom:16px; line-height:1.5; }
+  /* Visningsläge (icke-nyckelroller / delad länk) */
+  .visning-banner { background:#fff8e6; border:1px solid #f0d488; border-radius:8px; padding:11px 14px; font-size:13px; color:#7a5a00; margin-bottom:16px; line-height:1.5; }
+  .endast-visning .lagg-till-knapp,
+  .endast-visning .ta-bort-knapp,
+  .endast-visning .fm-vaxel,
+  .endast-visning #medl-ansv-rad button,
+  .endast-visning #kal-admin-rad button,
+  .endast-visning .skicka-footer { display:none !important; }
+  .endast-visning .fm-toggle { display:flex; opacity:.85; }
+  .endast-visning input,
+  .endast-visning .fm-toggle input,
+  .endast-visning .valfri-sektion > summary { pointer-events:none; }
+  .endast-visning .valfri-sektion > summary::before { opacity:.35; }
 </style>
 </head>
 <body>
@@ -119,6 +134,10 @@
     <p id="header-forening">Vänskapsförbundet Sverige-Israel</p>
   </div>
   <div class="body" id="formularet">
+    <div class="visning-banner" id="visning-banner" style="display:none;">
+      &#128065; <strong>Endast visning.</strong> Bara ordförande, vice ordförande, sekreterare och kassör kan redigera styrelsen — du kan se föreningens funktionärer och uppgifter.
+    </div>
+
     <div class="guide-box">
       <div class="guide-titel">Så här gör du</div>
       <ol class="guide-steg">
@@ -126,6 +145,10 @@
         <li><span class="valfri-tag">Valfritt</span> ansvariga &amp; publika uppgifter.</li>
         <li><strong>Bekräfta &amp; skicka in.</strong></li>
       </ol>
+    </div>
+
+    <div class="lank-info">
+      &#128279; <strong>Spara gärna denna länk.</strong> Den kan användas – och delas internt i styrelsen – för att när som helst se föreningens funktionärer och uppgifter.
     </div>
 
     <div class="sektion-huvud">
@@ -815,10 +838,25 @@ function _förifyllFöreningssida() {
   const anc = document.getElementById('fs-anchor'); if (anc && fs.anchor) anc.textContent = fs.anchor;
 }
 
+// ── Visningsläge: bara ordf/v.ordf/sekr/kassör får redigera, övriga endast titta ──
+function _tillämpaVisningsläge() {
+  if (urlData.redigerbar !== false) return;   // redigerbar (nyckelroll) → normal
+  const form = document.getElementById('formularet');
+  form.classList.add('endast-visning');
+  const b = document.getElementById('visning-banner'); if (b) b.style.display = 'block';
+  form.classList.add('visa-fm');                        // visa (låsta) föreningsmejl-kryssrutor
+  document.querySelectorAll('details.valfri-sektion').forEach(d => d.open = true); // öppna allt för visning
+  form.querySelectorAll('input, textarea, select').forEach(el => {
+    if (el.type === 'checkbox' || el.type === 'radio') el.disabled = true;
+    else el.readOnly = true;
+  });
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 byggSektioner();
 renderAllt();
 _förifyllFöreningssida();
+_tillämpaVisningsläge();
 // Sätt ordförande som default efter en tick (styrelseState fylls av renderAllt→init)
 setTimeout(_sätt_medl_ansv_till_ordförande, 0);
 </script>
