@@ -44,6 +44,11 @@
   .bekraftelse p { color: #555; font-size: 14px; }
   .footer { background: #f0f4f8; padding: 10px 24px; border-top: 1px solid #dde4ec; font-size: 11px; color: #888; }
   .footer a { color: #888; }
+  .samling-lista { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .samling-rad { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f0f6ff; border: 1px solid #c8dcf0; border-radius: 5px; cursor: pointer; }
+  .samling-rad:hover { background: #e4eef9; }
+  .samling-rad input[type=checkbox] { width: 17px; height: 17px; cursor: pointer; flex-shrink: 0; }
+  .samling-rad span { font-size: 13px; font-weight: 600; color: #003f7f; }
 </style>
 </head>
 <body>
@@ -61,6 +66,13 @@
       <div class="typ" id="dok-typ">Dokument</div>
       <div class="forening" id="dok-forening"></div>
       <div class="ar" id="dok-ar"></div>
+    </div>
+
+    <!-- Samling-sektion (visas bara för samlingsdokument) -->
+    <div id="samling-sektion" style="display:none;margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:600;color:#003f7f;margin-bottom:6px;">Bocka i vilka dokument som ingår</div>
+      <div class="samling-lista" id="samling-lista"></div>
+      <div id="samling-varning" style="display:none;margin-top:6px;background:#fff8e1;border:1px solid #ffe082;padding:6px 10px;border-radius:4px;font-size:12px;color:#7a5c00;">Välj minst ett dokument att inkludera.</div>
     </div>
 
     <form id="upload-form">
@@ -148,6 +160,35 @@ const doktypNamn = decodeURIComponent(p.get('n') || 'Dokument');
 const epost      = decodeURIComponent(p.get('e') || '');
 const maxOmbud      = parseInt(p.get('mo') || '0');
 const maxErsattare  = parseInt(p.get('me') || '10');
+
+// ── Samling-logik ─────────────────────────────────────────────────────────────
+const ärSamling = doktypId === 'samlingsdokument';
+let samlingsTyper = [];
+if (ärSamling) {
+  try {
+    const raw = p.get('typer') || '';
+    if (raw) {
+      const b64 = raw.replace(/-/g,'+').replace(/_/g,'/');
+      const pad = b64 + '=='.slice(0,(4-b64.length%4)%4);
+      samlingsTyper = JSON.parse(atob(pad));
+    }
+  } catch(e) { console.warn('Kunde inte läsa typer:', e); }
+
+  if (samlingsTyper.length > 0) {
+    document.getElementById('samling-sektion').style.display = '';
+    document.getElementById('samling-lista').innerHTML = samlingsTyper.map((t,i) =>
+      `<label class="samling-rad">
+        <input type="checkbox" id="samling-typ-${i}" value="${t.id}">
+        <span>${t.namn}</span>
+      </label>`
+    ).join('');
+    document.getElementById('steg1-nr').textContent = '2';
+    document.getElementById('steg2-nr').textContent = '3';
+  }
+  document.getElementById('dok-typ').textContent      = 'Samlingsdokument';
+  document.getElementById('dok-ar').textContent       = ar !== 'engång' ? 'Verksamhetsår ' + ar : 'Engångsdokument';
+  document.getElementById('h-subject').value          = `[VSI:${forening}|samlingsdokument|${ar}|${epost}]`;
+}
 
 // ── Ombud-logik ──────────────────────────────────────────────────────────────
 const ärOmbud = doktypId === 'ombudsbekräftelse';
@@ -249,12 +290,14 @@ document.addEventListener('click', e => {
   if (!sokEl?.contains(e.target) && !sokRes?.contains(e.target)) sokRes.style.display = 'none';
 });
 
-const arSuffix = (ar !== 'engång' && !doktypNamn.endsWith(ar)) ? ' ' + ar : '';
-document.getElementById('dok-typ').textContent      = doktypNamn + arSuffix;
+if (!ärSamling) {
+  const arSuffix = (ar !== 'engång' && !doktypNamn.endsWith(ar)) ? ' ' + ar : '';
+  document.getElementById('dok-typ').textContent = doktypNamn + arSuffix;
+  document.getElementById('dok-ar').textContent  = ar !== 'engång' ? 'Verksamhetsår ' + ar : 'Engångsdokument';
+}
 document.getElementById('dok-forening').textContent = forening;
-document.getElementById('dok-ar').textContent       = ar !== 'engång' ? 'Verksamhetsår ' + ar : 'Engångsdokument';
-document.getElementById('h-forening').value         = forening;
-document.getElementById('h-subject').value          = `[VSI:${forening}|${doktypId}|${ar}|${epost}]`;
+document.getElementById('h-forening').value          = forening;
+document.getElementById('h-subject').value           = `[VSI:${forening}|${doktypId}|${ar}|${epost}]`;
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
@@ -315,6 +358,22 @@ async function laddaUppTillCloudinary(fil, index, totalt) {
 
 uploadKnapp.addEventListener('click', async () => {
   if (!filInput.files.length) return;
+  // Ombudsbekräftelse kräver minst ett valt kongressombud
+  if (ärOmbud && maxOmbud > 0 && ombudLista.filter(o => o.roll === 'ombud').length === 0) {
+    const felBox = document.getElementById('fel-box');
+    felBox.textContent   = 'Du måste välja minst ett kongressombud innan du kan skicka in ombudsbekräftelsen.';
+    felBox.style.display = 'block';
+    return;
+  }
+  // Samlingsdokument kräver minst ett bockad dokumenttyp
+  if (ärSamling && samlingsTyper.length > 0) {
+    const valda = samlingsTyper.filter((_,i) => document.getElementById(`samling-typ-${i}`)?.checked);
+    if (valda.length === 0) {
+      document.getElementById('samling-varning').style.display = 'block';
+      return;
+    }
+    document.getElementById('samling-varning').style.display = 'none';
+  }
   uploadKnapp.disabled       = true;
   uploadKnapp.textContent    = 'Laddar upp...';
   const felBox               = document.getElementById('fel-box');
@@ -344,16 +403,24 @@ uploadKnapp.addEventListener('click', async () => {
       `[VSI-OMBUD:${JSON.stringify(ombudLista)}]`,
     ] : [];
 
+    const valdaTyper = ärSamling
+      ? samlingsTyper.filter((_,i) => document.getElementById(`samling-typ-${i}`)?.checked)
+      : [];
+    const samlRader = valdaTyper.length > 0
+      ? [`[VSI-SAMLING-TYPER:${JSON.stringify(valdaTyper.map(t => t.id))}]`]
+      : [];
+
     document.getElementById('h-body').value = [
       'DOKUMENTUPPLADDNING - VSI',
       '========================',
-      'Dokument: ' + doktypNamn,
+      'Dokument: ' + (ärSamling ? 'Samlingsdokument' : doktypNamn),
       'Förening: ' + forening,
       'År: '      + ar,
       'Datum: '   + new Date().toLocaleDateString('sv-SE'),
       '',
       ...urls.map(u => `[VSI-DOK-URL:${u}]`),
       ...ombudRader,
+      ...samlRader,
     ].join('\n');
 
     await emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, '#upload-form');
@@ -361,8 +428,28 @@ uploadKnapp.addEventListener('click', async () => {
     progressFill.style.width = '100%';
     document.getElementById('formular-body').style.display  = 'none';
     document.getElementById('bekraftelse-vy').style.display = 'block';
-    document.getElementById('bekr-text').textContent =
-      `"${doktypNamn}" för ${forening} har skickats in och väntar på bekräftelse på mottagandet.`;
+
+    if (ärSamling && valdaTyper.length > 0) {
+      const valdaIds = new Set(valdaTyper.map(t => t.id));
+      const kvarTyper = samlingsTyper.filter(t => !valdaIds.has(t.id));
+      const täckta = valdaTyper.map(t => t.namn).join(', ');
+      if (kvarTyper.length > 0) {
+        const kvarB64Raw = btoa(JSON.stringify(kvarTyper));
+        const kvarB64    = kvarB64Raw.replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+        const kvarUrl    = `?f=${encodeURIComponent(forening)}&d=samlingsdokument&a=${encodeURIComponent(ar)}&e=${encodeURIComponent(epost)}&typer=${kvarB64}`;
+        const kvarNamn   = kvarTyper.map(t => t.namn).join(', ');
+        document.getElementById('bekr-text').innerHTML =
+          `Inskickat (${täckta}) för ${forening}.<br><br>` +
+          `<strong>${kvarTyper.length} dokumenttyp${kvarTyper.length > 1 ? 'er' : ''} saknas fortfarande:</strong> ${kvarNamn}.<br><br>` +
+          `<a href="${kvarUrl}" style="color:#003f7f;font-weight:700;">&#128228; Ladda upp resterande dokument</a>`;
+      } else {
+        document.getElementById('bekr-text').textContent =
+          `Alla dokument (${täckta}) för ${forening} har skickats in!`;
+      }
+    } else {
+      document.getElementById('bekr-text').textContent =
+        `"${doktypNamn}" för ${forening} har skickats in och väntar på bekräftelse på mottagandet.`;
+    }
 
   } catch (err) {
     felBox.textContent         = 'Fel: ' + (err?.message || err?.text || JSON.stringify(err));
