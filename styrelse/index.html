@@ -151,6 +151,12 @@
       &#128279; <strong>Spara gärna denna länk.</strong> Den kan användas – och delas internt i styrelsen – för att när som helst se föreningens funktionärer och uppgifter.
     </div>
 
+    <div class="lank-info" style="background:#fff6e8;border-color:#e0b070;">
+      &#9881;&#65039; <strong>MyClub-administratör:</strong> nuvarande värde hämtas direkt från MyClubs administratörsregister.
+      Bockar du <strong>ur</strong> någon tas behörigheten bort <strong>direkt</strong> i MyClub.
+      Bockar du <strong>i</strong> någon ny skapas behörigheten först när personen själv bekräftat den via sitt funktionärsmejl.
+    </div>
+
     <div class="sektion-huvud">
       <span>&#128101; Styrelsen</span>
       <span class="oblig-tag">Obligatoriskt</span>
@@ -405,6 +411,13 @@ let styrelseState = [];
   styrelseState.push({ id: String(p.id || ''), fn: p.fn || '', en: p.en || '', roll: p.roll || '', sektion: sek, foreningsmejl: p.foreningsmejl !== false });
 });
 
+// ── MyClub-administratörer (per person-id, förfyllt från MyClubs admin-register) ──
+let myclubAdminIds = new Set((urlData.myclub_admin_ids || []).map(String));
+function toggleMyclubAdmin(id, checked) {
+  if (checked) myclubAdminIds.add(String(id)); else myclubAdminIds.delete(String(id));
+  renderAllt();   // synka kryssrutan på personens alla rader
+}
+
 function initialer(fn, en) {
   return ((fn||'')[0]||'').toUpperCase() + ((en||'')[0]||'').toUpperCase();
 }
@@ -434,6 +447,10 @@ function renderAllt() {
         <label class="fm-toggle" title="Bocka i om personen ska ta emot mejl som skickas till föreningens adress">
           <input type="checkbox" ${p.foreningsmejl ? 'checked' : ''} onchange="toggleFöreningsmejl('${esc(p.id)}','${esc(p.roll)}',this.checked)">
           <span>Föreningsmejl</span>
+        </label>
+        <label class="fm-toggle" title="MyClub-administratör – kan redigera föreningens uppgifter i MyClub. Borttag sker direkt; tillägg kräver personens bekräftelse.">
+          <input type="checkbox" ${myclubAdminIds.has(String(p.id)) ? 'checked' : ''} onchange="toggleMyclubAdmin('${esc(p.id)}',this.checked)">
+          <span>MyClub-admin</span>
         </label>
         <button class="ta-bort-knapp" onclick="taBort('${esc(p.id)}','${esc(p.roll)}')" title="Ta bort">&#215;</button>
       </div>`;
@@ -638,7 +655,7 @@ async function skickaIn() {
     forening:           urlData.forening || '',
     inskickat_av_id:    String(urlData.inskickat_av_id || ''),
     inskickat_av:       urlData.inskickat_av || '',
-    ny_styrelse:        styrelseState.map(p => ({ id: p.id, fn: p.fn, en: p.en, roll: p.roll, foreningsmejl: p.foreningsmejl !== false, ...(p.extern ? { extern: true } : {}) })),
+    ny_styrelse:        styrelseState.map(p => ({ id: p.id, fn: p.fn, en: p.en, roll: p.roll, foreningsmejl: p.foreningsmejl !== false, myclub_admin: myclubAdminIds.has(String(p.id)), ...(p.extern ? { extern: true } : {}) })),
     bekraftad:          true,
     ar:                 år,
     skickad:            new Date().toISOString().split('T')[0],
