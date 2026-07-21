@@ -54,20 +54,19 @@
 
   <div class="body" id="formularet">
     <div class="info-box">
-      Här skapar du nästa nummer av Israelnytt. Skriv ledaren, lägg till artiklarna och eventuella videoklipp — ett i taget.
-      För varje artikel fyller du i rubrik, en kort text, en länk och väljer ett ämne. När du är klar klickar du på
-      <strong>Skicka in</strong> längst ner, så landar allt i nyhetsbrevsmodulen.
+      Så här gör du nästa <strong>Israelnytt</strong> i fyra enkla steg. Du behöver inte tänka på
+      bilder, kategorier eller layout – det fixas i redaktionen. Fyll bara i texterna nedan och
+      klicka <strong>Skicka in</strong> längst ner.
     </div>
 
-    <label for="redaktor">Ditt namn (avsändare)</label>
+    <label for="redaktor">Ditt namn</label>
     <input type="text" id="redaktor" placeholder="T.ex. Mats Fält" value="Mats Fält">
 
     <!-- LEDARE -->
     <div class="sektion">
-      <div class="sektion-rubrik">Redaktören har ordet</div>
-      <label for="l-rubrik">Rubrik</label>
-      <input type="text" id="l-rubrik" value="Redaktören har ordet">
-      <label for="l-text">Text (ett eller flera stycken – lämna blankrad mellan stycken)</label>
+      <div class="sektion-rubrik">1 · Ledaren (Redaktören har ordet)</div>
+      <div class="hint" style="margin-bottom:8px;">Skriv din text. Lämna en <strong>blankrad</strong> mellan styckena så blir det luft mellan dem i nyhetsbrevet.</div>
+      <label for="l-text">Text</label>
       <textarea id="l-text" rows="6" placeholder="Skriv ledaren här…"></textarea>
       <div class="rad2">
         <div>
@@ -83,21 +82,24 @@
 
     <!-- ARTIKLAR -->
     <div class="sektion">
-      <div class="sektion-rubrik">Artiklar (Läsvärt & Analys)</div>
+      <div class="sektion-rubrik">2 · Artiklar</div>
+      <div class="hint" style="margin-bottom:8px;">För varje tips: <strong>klistra in länken</strong> och skriv en kort rubrik + 1–2 meningar. Klicka <strong>＋ Lägg till artikel</strong> för fler.</div>
       <div id="artiklar"></div>
       <button type="button" class="lagg-till" onclick="laggTillArtikel()">＋ Lägg till artikel</button>
     </div>
 
     <!-- VIDEO -->
     <div class="sektion">
-      <div class="sektion-rubrik">Video & klipp (max 3 visas)</div>
+      <div class="sektion-rubrik">3 · Video &amp; klipp <span style="font-weight:400;text-transform:none;letter-spacing:0;">(valfritt)</span></div>
+      <div class="hint" style="margin-bottom:8px;">Klistra in en länk till ett klipp (YouTube, Facebook eller X). Upp till 6 visas.</div>
       <div id="videor"></div>
       <button type="button" class="lagg-till" onclick="laggTillVideo()">＋ Lägg till videoklipp</button>
     </div>
 
     <!-- INSÄNDARE -->
     <div class="sektion">
-      <div class="sektion-rubrik">Insändare / Debatt (valfritt)</div>
+      <div class="sektion-rubrik">4 · Insändare / Debatt <span style="font-weight:400;text-transform:none;letter-spacing:0;">(valfritt)</span></div>
+      <div class="hint" style="margin-bottom:8px;">Lämna tomt om det inte finns någon insändare i det här numret.</div>
       <label for="i-rubrik">Rubrik</label>
       <input type="text" id="i-rubrik" placeholder="Lämna tomt om ingen insändare">
       <label for="i-text">Text</label>
@@ -126,12 +128,6 @@
 </div>
 
 <script>
-const KATEGORIER = ["Läsvärt","Opinion","Analys","Internationellt","Utrikes","Historik","Säkerhet","Debatt","USA","EU","FN & Diplomati","Iran","Hamas","Ekonomi","Politik","Media"];
-
-function katOptions(vald) {
-  return KATEGORIER.map(k => `<option value="${k}"${k===vald?' selected':''}>${k}</option>`).join('');
-}
-
 let artNr = 0, vidNr = 0;
 
 function laggTillArtikel(data) {
@@ -143,22 +139,15 @@ function laggTillArtikel(data) {
   div.innerHTML = `
     <span class="num">Artikel</span>
     <button type="button" class="ta-bort" title="Ta bort" onclick="this.parentNode.remove()">×</button>
-    <label>Rubrik</label>
-    <input type="text" class="a-rubrik" value="${(data.title||'').replace(/"/g,'&quot;')}" placeholder="Artikelns rubrik">
-    <label>Ingress (kort sammanfattning)</label>
-    <textarea class="a-ingress" rows="2" placeholder="1–2 meningar">${data.ingress||''}</textarea>
-    <div class="rad2">
-      <div>
-        <label>Kategori</label>
-        <select class="a-kategori">${katOptions(data.category||'Läsvärt')}</select>
-      </div>
-      <div>
-        <label>Källa</label>
-        <input type="text" class="a-kalla" value="${(data.source||'').replace(/"/g,'&quot;')}" placeholder="T.ex. The Free Press">
-      </div>
-    </div>
     <label>Länk till artikeln</label>
-    <input type="url" class="a-url" value="${data.url||''}" placeholder="https://…">
+    <input type="url" class="a-url" value="${data.url||''}" placeholder="Klistra in webbadressen, t.ex. https://www.svd.se/…">
+    <label>Rubrik</label>
+    <input type="text" class="a-rubrik" value="${(data.title||'').replace(/"/g,'&quot;')}" placeholder="Kort rubrik – t.ex. Ambassadören om sin tid i Sverige">
+    <label>Ingress (1–2 meningar)</label>
+    <textarea class="a-ingress" rows="2" placeholder="Vad handlar artikeln om? Skriv gärna med egna ord.">${data.ingress||''}</textarea>
+    <label>Källa <span style="font-weight:400;color:#6B7280;">(valfritt)</span></label>
+    <input type="text" class="a-kalla" value="${(data.source||'').replace(/"/g,'&quot;')}" placeholder="T.ex. Svenska Dagbladet">
+    <div class="hint">Bild och kategori sätts automatiskt i redaktionen.</div>
   `;
   document.getElementById('artiklar').appendChild(div);
 }
@@ -172,14 +161,12 @@ function laggTillVideo(data) {
   div.innerHTML = `
     <span class="num">Video</span>
     <button type="button" class="ta-bort" title="Ta bort" onclick="this.parentNode.remove()">×</button>
-    <label>Länk (YouTube/Facebook/X)</label>
-    <input type="url" class="v-url" value="${data.url||''}" placeholder="https://youtu.be/…">
+    <label>Länk (YouTube, Facebook eller X)</label>
+    <input type="url" class="v-url" value="${data.url||''}" placeholder="Klistra in klippets länk, t.ex. https://youtu.be/…">
     <label>Titel</label>
-    <input type="text" class="v-titel" value="${(data.title||'').replace(/"/g,'&quot;')}" placeholder="Klippets titel">
-    <label>Presentation (kort)</label>
-    <textarea class="v-ingress" rows="2" placeholder="Vad handlar klippet om?">${data.ingress||''}</textarea>
-    <label>Längd (valfritt, t.ex. 12:30)</label>
-    <input type="text" class="v-langd" value="${data.duration||''}" placeholder="mm:ss">
+    <input type="text" class="v-titel" value="${(data.title||'').replace(/"/g,'&quot;')}" placeholder="Klippets rubrik">
+    <label>Presentation <span style="font-weight:400;color:#6B7280;">(valfritt)</span></label>
+    <textarea class="v-ingress" rows="2" placeholder="En mening om vad klippet handlar om.">${data.ingress||''}</textarea>
   `;
   document.getElementById('videor').appendChild(div);
 }
@@ -191,7 +178,7 @@ laggTillVideo();
 function samlaIn() {
   const paras = document.getElementById('l-text').value.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
   const leader = {
-    heading: document.getElementById('l-rubrik').value.trim() || 'Redaktören har ordet',
+    heading: 'Redaktören har ordet',   // visas inte i mallen längre, men behålls för bakåtkompat
     paragraphs: paras,
     name: document.getElementById('l-namn').value.trim(),
     title: document.getElementById('l-titel').value.trim()
@@ -205,7 +192,7 @@ function samlaIn() {
     articles.push({
       title,
       ingress:  el.querySelector('.a-ingress').value.trim(),
-      category: el.querySelector('.a-kategori').value,
+      category: 'Läsvärt',   // sätts/föreslås automatiskt i redaktionen (AI-kategorier)
       source:   el.querySelector('.a-kalla').value.trim(),
       url
     });
@@ -218,8 +205,7 @@ function samlaIn() {
     videos.push({
       url,
       title:    el.querySelector('.v-titel').value.trim(),
-      ingress:  el.querySelector('.v-ingress').value.trim(),
-      duration: el.querySelector('.v-langd').value.trim()
+      ingress:  el.querySelector('.v-ingress').value.trim()
     });
   });
 
@@ -253,7 +239,11 @@ async function skicka() {
   knapp.disabled = true;
   knapp.textContent = 'Skickar…';
 
-  const body = '===VSI-NYHETSBREV-START===\n' + JSON.stringify(payload) + '\n===VSI-NYHETSBREV-SLUT===';
+  // Base64url-koda payloaden så mejlets radbrytning/teckenkodning (quoted-printable) inte
+  // kan förvanska innehållet. base64url = A-Za-z0-9-_ (inga +, /, = som QP annars manglar).
+  const b64url = btoa(unescape(encodeURIComponent(JSON.stringify(payload))))
+                   .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const body = '===VSI-NYHETSBREV-B64-START===\n' + b64url + '\n===VSI-NYHETSBREV-B64-SLUT===';
 
   try {
     emailjs.init(EMAILJS_PUBLIC_KEY);
