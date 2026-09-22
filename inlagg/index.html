@@ -2,6 +2,13 @@
 <html lang="sv">
 <head>
 <meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
+<script>
+// Capture before loading any assets, then remove credentials from the address bar.
+const inlaggToken = new URLSearchParams(location.hash.slice(1)).get('t')
+  || new URLSearchParams(location.search).get('t') || '';
+if (inlaggToken) history.replaceState(null, '', location.pathname);
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nytt inlägg — sverigeisrael.se</title>
 <script src="../config.js"></script>
@@ -46,23 +53,23 @@
     <div class="skrivet-av">Inloggad som: <strong id="visningsnamn">…</strong></div>
 
     <label for="f-pseudonym">Namn som visas publikt på hemsidan</label>
-    <input type="text" id="f-pseudonym" placeholder="Ditt namn (eller en pseudonym)">
+    <input type="text" id="f-pseudonym" maxlength="100" placeholder="Ditt namn (eller en pseudonym)">
     <div class="hint">Lämna tomt för att visas med ditt riktiga namn. Skriv en pseudonym här om du vill vara anonym — det gäller bara det här inlägget.</div>
 
     <label for="f-rubrik">Rubrik</label>
-    <input type="text" id="f-rubrik" placeholder="Rubrik på inlägget">
+    <input type="text" id="f-rubrik" maxlength="200" placeholder="Rubrik på inlägget">
 
     <label for="f-text">Text</label>
-    <textarea id="f-text" rows="8" placeholder="Skriv inläggstexten här…"></textarea>
+    <textarea id="f-text" rows="8" maxlength="50000" placeholder="Skriv inläggstexten här…"></textarea>
 
     <label for="f-ingress">Ingress <span style="font-weight:400;color:#6B7280;">(valfritt)</span></label>
-    <textarea id="f-ingress" rows="2" placeholder="Kort sammanfattning"></textarea>
+    <textarea id="f-ingress" rows="2" maxlength="1000" placeholder="Kort sammanfattning"></textarea>
 
     <label for="f-kategori">Kategori</label>
     <select id="f-kategori"><option value="">Läser in kategorier…</option></select>
 
     <label for="f-bild">Bild <span style="font-weight:400;color:#6B7280;">(valfritt)</span></label>
-    <input type="file" id="f-bild" accept="image/*">
+    <input type="file" id="f-bild" accept="image/jpeg,image/png,image/webp">
     <div class="hint" id="bild-status"></div>
 
     <div class="hint" style="margin-top:14px;line-height:1.5;">Skriv i en respektfull, seriös och korrekt ton — texten publiceras i föreningens namn. Vänskapsförbundet har inget utgivningsbevis, så du som avsändare är själv juridiskt ansvarig för innehållet.</div>
@@ -87,14 +94,17 @@
 
 <script>
 const WP_BAS = 'https://sverigeisrael.se/wp-json/vsi/v1';
-const token  = new URLSearchParams(window.location.search).get('t') || '';
+const token = inlaggToken;
 
 let bildUrl = null;
 
 async function initiera() {
   if (!token) { visaOgiltig('Länken saknar en giltig kod.'); return; }
   try {
-    const r = await fetch(`${WP_BAS}/vem-ar-jag?token=${encodeURIComponent(token)}`);
+    const r = await fetch(`${WP_BAS}/vem-ar-jag`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }), cache: 'no-store', referrerPolicy: 'no-referrer',
+    });
     const data = await r.json();
     if (!r.ok) { visaOgiltig(data?.message); return; }
     document.getElementById('visningsnamn').textContent = data.namn;
@@ -118,8 +128,8 @@ async function läsKategorier() {
   try {
     const r = await fetch(`${WP_BAS}/kategorier`);
     const data = await r.json();
-    sel.innerHTML = '<option value="">Ingen kategori</option>' +
-      data.map(k => `<option value="${k.id}">${k.namn.replace(/</g,'&lt;')}</option>`).join('');
+    sel.replaceChildren(new Option('Ingen kategori', ''));
+    for (const k of data) sel.add(new Option(String(k.namn), String(Number(k.id) || 0)));
   } catch (e) {
     sel.innerHTML = '<option value="">Kunde inte läsa kategorier</option>';
   }
@@ -130,6 +140,10 @@ document.getElementById('f-bild').addEventListener('change', async function () {
   const statusEl = document.getElementById('bild-status');
   bildUrl = null;
   if (!fil) { statusEl.textContent = ''; return; }
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(fil.type) || fil.size > 5 * 1024 * 1024) {
+    statusEl.textContent = 'Välj en JPEG-, PNG- eller WebP-bild på högst 5 MB.';
+    return;
+  }
   statusEl.textContent = 'Laddar upp bild…';
   try {
     const fd = new FormData();
