@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
+<meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Styrelseuppdatering — VSI</title>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pako@2/dist/pako.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #f0f4f8; padding: 16px; color: #222; }
@@ -307,7 +306,9 @@
 </div>
 
 <script src="../config.js"></script>
-<script>
+<script src="../secure-forms.js"></script>
+<script>(async () => {
+
 // ── Sektionsdefinitioner (ordning = visningsordning) ──────────────────────────
 const SEKTIONER = [
   { id: 'nf',               rubrik: 'Nyckelfunktionärer',  under: 'ordförande · v. ordförande · kassör · sekreterare',
@@ -336,22 +337,7 @@ function sektion_for_roll(roll) {
 }
 
 // ── Läs URL-data ──────────────────────────────────────────────────────────────
-let urlData = { forening: '', inskickat_av: '', inskickat_av_id: '', styrelse: [], alla_m: [], max_ombud: 2, max_ersattare: 10 };
-try {
-  const raw = new URLSearchParams(window.location.hash.slice(1)).get('d')
-           || new URLSearchParams(window.location.search).get('d');
-  if (raw) {
-    const isCompressed = raw.startsWith('z');
-    const b64 = (isCompressed ? raw.slice(1) : raw).replace(/-/g,'+').replace(/_/g,'/');
-    const pad = b64 + '=='.slice(0, (4 - b64.length % 4) % 4);
-    if (isCompressed) {
-      const bytes = Uint8Array.from(atob(pad), c => c.charCodeAt(0));
-      urlData = JSON.parse(pako.inflate(bytes, { to: 'string' }));
-    } else {
-      urlData = JSON.parse(decodeURIComponent(escape(atob(pad))));
-    }
-  }
-} catch(e) { console.warn('URL-data fel:', e); }
+const urlData = await VsiSecure.load("styrelse");
 
 document.getElementById('header-forening').textContent =
   (urlData.forening || 'Vänskapsförbundet Sverige-Israel') + ' — Styrelseuppdatering';
@@ -689,12 +675,7 @@ async function skickaIn() {
     + '\n===VSI-STYRELSE-SLUT===';
 
   try {
-    emailjs.init(EMAILJS_PUBLIC_KEY);
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      subject:   'Styrelseanmalan',
-      body:      body,
-      from_name: urlData.inskickat_av || 'Styrelseansvarig'
-    });
+    await VsiSecure.submit(payload);
     document.getElementById('formularet').style.display = 'none';
     document.getElementById('bekraftelse').style.display = 'block';
   } catch(e) {
@@ -894,6 +875,9 @@ _uppdateraKalAdminVisning();   // visa inladdad kalenderadministratör
 _tillämpaVisningsläge();
 // Sätt ordförande som default efter en tick (styrelseState fylls av renderAllt→init)
 setTimeout(_sätt_medl_ansv_till_ordförande, 0);
+
+Object.assign(window, {sektion_for_roll, maxFörSektion, byggSektioner, uppdateraMaxInfo, toggleMyclubAdmin, initialer, esc, renderAllt, taBort, toggleFöreningsmejl, _uppdFmInfo, växlaFöreningsmejl, öppnaModal, stängModal, stängModalBakgrund, renderModalLista, välj, läggTillPerson, läggTillExtern, uppdateraSkickaKnapp, skickaIn, _uppdateraMedlAnsvVisning, _sätt_medl_ansv_till_ordförande, öppnaMedlAnsvModal, stängMedlAnsvModal, filteraMedlAnsvLista, _filteraMedlAnsvLista, _välj_medl_ansv, _uppdateraKalAdminVisning, öppnaKalAdminModal, stängKalAdminModal, filteraKalAdminLista, _filteraKalAdminLista, _välj_kal_admin, _förifyllFöreningssida, _tillämpaVisningsläge});
+})().catch(error => { document.body.textContent = error.message; });
 </script>
 </body>
 </html>

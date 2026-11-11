@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
+<meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ladda upp dokument — VSI</title>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pako@2/dist/pako.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #f0f4f8; padding: 16px; color: #222; }
@@ -150,9 +149,14 @@
 </div>
 
 <script src="../config.js"></script>
-<script>
+<script src="../secure-forms.js"></script>
+<script>(async()=>{
+function escapeHtml(value){return String(value||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
 const MAX_MB = 10;
-const p          = new URLSearchParams(window.location.search);
+const grant = await VsiSecure.load('dokument');
+const p = new URLSearchParams({ f: grant.forening, d: grant.dokument_typ, a: grant.ar || 'engång',
+  n: grant.namn || 'Dokument', e: grant.epost || '', mo: grant.max_ombud || 0, me: grant.max_ersattare || 10 });
 const forening   = decodeURIComponent(p.get('f') || '');
 const doktypId   = p.get('d') || '';
 const ar         = p.get('a') || new Date().getFullYear().toString();
@@ -163,23 +167,16 @@ const maxErsattare  = parseInt(p.get('me') || '10');
 
 // ── Samling-logik ─────────────────────────────────────────────────────────────
 const ärSamling = doktypId === 'samlingsdokument';
-let samlingsTyper = [];
+let samlingsTyper = grant.types || [];
 if (ärSamling) {
-  try {
-    const raw = p.get('typer') || '';
-    if (raw) {
-      const b64 = raw.replace(/-/g,'+').replace(/_/g,'/');
-      const pad = b64 + '=='.slice(0,(4-b64.length%4)%4);
-      samlingsTyper = JSON.parse(atob(pad));
-    }
-  } catch(e) { console.warn('Kunde inte läsa typer:', e); }
+
 
   if (samlingsTyper.length > 0) {
     document.getElementById('samling-sektion').style.display = '';
     document.getElementById('samling-lista').innerHTML = samlingsTyper.map((t,i) =>
       `<label class="samling-rad">
-        <input type="checkbox" id="samling-typ-${i}" value="${t.id}">
-        <span>${t.namn}</span>
+        <input type="checkbox" id="samling-typ-${i}" value="${escapeHtml(t.id)}">
+        <span>${escapeHtml(t.namn)}</span>
       </label>`
     ).join('');
     document.getElementById('steg1-nr').textContent = '2';
@@ -218,7 +215,7 @@ function renderaOmbudListor() {
     el.innerHTML = poster.length === 0
       ? `<div style="font-size:11px;color:#aaa;font-style:italic;">Inga tillagda</div>`
       : poster.map((o, i) => `<div style="display:flex;align-items:center;gap:6px;background:#f0f6ff;border:1px solid #c8dcf0;border-radius:4px;padding:4px 8px;font-size:12px;">
-          <span style="flex:1;">${o.namn}</span>
+          <span style="flex:1;">${escapeHtml(o.namn)}</span>
           <button onclick="taBortOmbud('${roll}',${i})" style="background:none;border:none;color:#c00;cursor:pointer;font-size:14px;padding:0 2px;">×</button>
         </div>`).join('');
   });
@@ -244,17 +241,7 @@ function läggTillOmbud(namn, roll) {
 }
 
 // Ladda och dekomprimera medlemsdata från URL-hash
-let alleM = [];
-try {
-  const hashVal = new URLSearchParams(window.location.hash.slice(1)).get('d');
-  if (hashVal) {
-    const isZ = hashVal.startsWith('z');
-    const b64 = (isZ ? hashVal.slice(1) : hashVal).replace(/-/g,'+').replace(/_/g,'/');
-    const pad = b64 + '=='.slice(0,(4-b64.length%4)%4);
-    const bytes = Uint8Array.from(atob(pad), c => c.charCodeAt(0));
-    alleM = JSON.parse(isZ ? pako.inflate(bytes, {to:'string'}) : new TextDecoder().decode(bytes));
-  }
-} catch(e) { console.warn('Kunde inte läsa medlemsdata:', e); }
+const alleM = grant.members || [];
 
 // Sökfält mot medlemsregistret (eller fri text om listan saknas)
 const sokEl  = document.getElementById('ombud-sok');
@@ -299,7 +286,7 @@ document.getElementById('dok-forening').textContent = forening;
 document.getElementById('h-forening').value          = forening;
 document.getElementById('h-subject').value           = `[VSI:${forening}|${doktypId}|${ar}|${epost}]`;
 
-emailjs.init(EMAILJS_PUBLIC_KEY);
+// Inskick sker via VsiSecure; EmailJS används inte i detta formulär.
 
 const filInput    = document.getElementById('fil-input');
 const uploadKnapp = document.getElementById('upload-knapp');
@@ -423,7 +410,11 @@ uploadKnapp.addEventListener('click', async () => {
       ...samlRader,
     ].join('\n');
 
-    await emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, '#upload-form');
+    await VsiSecure.submit({ urls, ombud: ombudLista.map(person => {
+      const matches = alleM.filter(member => `${member.fn} ${member.en}`.trim() === person.namn);
+      if (matches.length !== 1) throw new Error('Personen måste väljas entydigt ur föreningens register.');
+      return { ...person, id: String(matches[0].id) };
+    }), types: valdaTyper.map(type => type.id) });
 
     progressFill.style.width = '100%';
     document.getElementById('formular-body').style.display  = 'none';
@@ -459,6 +450,8 @@ uploadKnapp.addEventListener('click', async () => {
     progressWrap.style.display = 'none';
   }
 });
-</script>
+
+Object.assign(window, {escapeHtml, uppdateraOmbudRäknare, renderaOmbudListor, taBortOmbud, läggTillOmbud, välj, laddaUppTillCloudinary});
+})().catch(error=>{document.body.textContent=error.message;});</script>
 </body>
 </html>

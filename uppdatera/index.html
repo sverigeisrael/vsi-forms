@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
+<meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Uppdatera dina uppgifter — VSI</title>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #f0f4f8; padding: 16px; color: #222; }
@@ -155,7 +155,9 @@
 </div>
 
 <script src="../config.js"></script>
-<script>
+<script src="../secure-forms.js"></script>
+<script>(async () => {
+
 // Alla VSI-funktioner
 const ALLA_FUNKTIONER = [
   'ordförande','vice ordförande','kassör','sekreterare',
@@ -182,15 +184,7 @@ const ROLL_INFO = {
 };
 
 // Läs URL-param: hash (#d=) prioriteras över query (?d=) för att undvika URI Too Long
-let original = {};
-try {
-  const hashRaw  = window.location.hash.startsWith('#d=') ? window.location.hash.slice(3) : null;
-  const queryRaw = new URLSearchParams(window.location.search).get('d');
-  const raw = hashRaw || queryRaw;
-  if (raw) original = JSON.parse(decodeURIComponent(escape(atob(raw.replace(/-/g,'+').replace(/_/g,'/')))));
-} catch(e) {
-  console.warn('Kunde inte läsa URL-param:', e);
-}
+const original = await VsiSecure.load("funktionar");
 
 // Fyll i fält från original-data
 function fyllFalt(id, varde) {
@@ -286,12 +280,7 @@ document.getElementById('skicka-knapp').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    emailjs.init(EMAILJS_PUBLIC_KEY);
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      subject: 'Funktionarsuppdatering',
-      body:    mejlBody,
-      from_name: data.fornamn + ' ' + data.efternamn
-    });
+    await VsiSecure.submit(data);
     document.getElementById('formular-body').style.display = 'none';
     document.getElementById('bekraftelse-vy').style.display = 'block';
   } catch(err) {
@@ -301,6 +290,9 @@ document.getElementById('skicka-knapp').addEventListener('click', async () => {
     knapp.textContent = '📨 Skicka in bekräftelse';
   }
 });
+
+Object.assign(window, {fyllFalt});
+})().catch(error => { document.body.textContent = error.message; });
 </script>
 </body>
 </html>
